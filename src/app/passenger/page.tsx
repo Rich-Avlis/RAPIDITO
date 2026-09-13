@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import dynamic from 'next/dynamic'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
@@ -28,6 +28,12 @@ interface SelectedPlace {
   lng: number
 }
 
+interface SearchSuggestion {
+  name: string
+  lat: number
+  lng: number
+}
+
 type PanelView = 'home' | 'search' | 'vehicles' | 'vehicleDetail' | 'ride'
 
 export default function PassengerDashboard() {
@@ -48,6 +54,31 @@ export default function PassengerDashboard() {
   const [customPrice, setCustomPrice] = useState<number>(0)
   const [tripType, setTripType] = useState<'Solo ida' | 'Ida y vuelta' | 'Multi paradas'>('Solo ida')
   const [tripTypeOpen, setTripTypeOpen] = useState(false)
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([])
+  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false)
+  const [searchHistory, setSearchHistory] = useState<SearchSuggestion[]>([])
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Load search history from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('rapidito_search_history')
+    if (saved) {
+      try {
+        setSearchHistory(JSON.parse(saved))
+      } catch {}
+    }
+  }, [])
+
+  // Save to search history
+  const addToHistory = (place: SearchSuggestion) => {
+    const newHistory = [place, ...searchHistory.filter(h => h.name !== place.name)].slice(0, 10)
+    setSearchHistory(newHistory)
+    localStorage.setItem('rapidito_search_history', JSON.stringify(newHistory))
+  }
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -100,6 +131,74 @@ export default function PassengerDashboard() {
     }
   }
 
+  // Nominatim search for places
+  const searchPlaces = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setSearchSuggestions([])
+      return
+    }
+
+    setIsSearchingPlaces(true)
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Quíbor, Venezuela')}&format=json&limit=5&accept-language=es&addressdetails=1`
+      )
+      const data = await res.json()
+      const suggestions: SearchSuggestion[] = data.map((item: any) => ({
+        name: item.display_name?.split(',').slice(0, 3).join(',') || item.name,
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+      }))
+      setSearchSuggestions(suggestions)
+    } catch (error) {
+      console.error('Search error:', error)
+    } finally {
+      setIsSearchingPlaces(false)
+    }
+  }, [])
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      searchPlaces(searchQuery)
+    }, 500)
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchQuery, searchPlaces])
+
+  const handleSelectSuggestion = (suggestion: SearchSuggestion) => {
+    if (selectingField === 'origin') {
+      setOrigin(suggestion)
+    } else {
+      setDestination(suggestion)
+      addToHistory(suggestion)
+    }
+    setSearchQuery('')
+    setSearchSuggestions([])
+    setSelectingField(null)
+    if (selectingField === 'destination') {
+      setPanelView('vehicles')
+    }
+  }
+
+  const handleSelectFromHistory = (place: SearchSuggestion) => {
+    if (selectingField === 'origin') {
+      setOrigin(place)
+    } else {
+      setDestination(place)
+    }
+    setSelectingField(null)
+    if (selectingField === 'destination') {
+      setPanelView('vehicles')
+    }
+  }
+
   const handleMapClick = async (lat: number, lng: number) => {
     try {
       const res = await fetch(
@@ -108,57 +207,28 @@ export default function PassengerDashboard() {
       const data = await res.json()
       const name = data.display_name?.split(',').slice(0, 2).join(',') || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
 
+      const place = { name, lat, lng }
       if (selectingField === 'origin') {
-        setOrigin({ name, lat, lng })
+        setOrigin(place)
         setSelectingField(null)
       } else if (selectingField === 'destination') {
-        setDestination({ name, lat, lng })
+        setDestination(place)
+        addToHistory(place)
         setSelectingField(null)
         setPanelView('vehicles')
       }
     } catch {
       const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+      const place = { name: fallback, lat, lng }
       if (selectingField === 'origin') {
-        setOrigin({ name: fallback, lat, lng })
+        setOrigin(place)
         setSelectingField(null)
       } else if (selectingField === 'destination') {
-        setDestination({ name: fallback, lat, lng })
+        setDestination(place)
+        addToHistory(place)
         setSelectingField(null)
         setPanelView('vehicles')
       }
-    }
-  }
-
-  const handleRequestRide = async (vehicleType: string) => {
-    if (!origin || !destination) return
-
-    setIsSearching(true)
-    setSelectedVehicle(vehicleType)
-
-    try {
-      const response = await fetch('/api/rides', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originAddress: origin.name,
-          originLat: origin.lat,
-          originLng: origin.lng,
-          destAddress: destination.name,
-          destLat: destination.lat,
-          destLng: destination.lng,
-          estimatedFare: rideEstimate?.estimatedFare || 1.0,
-        }),
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        setRideEstimate(data.data.fare)
-        setCustomPrice(data.data.fare.estimatedFare)
-      }
-    } catch (error) {
-      console.error('Error requesting ride:', error)
-    } finally {
-      setIsSearching(false)
     }
   }
 
@@ -218,7 +288,7 @@ export default function PassengerDashboard() {
 
               <div className="flex items-center justify-between mb-8">
                 <p className="text-lg">{user.firstName} {user.lastName}</p>
-                <button className="bg-[#CDDC39] text-[#1a1f36] px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2">
+                <button className="bg-[#FF6B00] text-white px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
@@ -272,8 +342,8 @@ export default function PassengerDashboard() {
           </button>
 
           <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2 flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#CDDC39] rounded-full flex items-center justify-center">
-              <span className="text-xs">💎</span>
+            <div className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center">
+              <span className="text-xs text-white">💎</span>
             </div>
             <div>
               <p className="text-sm font-bold text-gray-800">Plata</p>
@@ -324,26 +394,30 @@ export default function PassengerDashboard() {
             <div className="p-5 space-y-4">
               {/* Where to? Search Bar */}
               <button
-                onClick={() => setPanelView('search')}
+                onClick={() => {
+                  setPanelView('search')
+                  setSelectingField('destination')
+                  setTimeout(() => searchInputRef.current?.focus(), 100)
+                }}
                 className="w-full bg-gray-100 rounded-2xl px-5 py-4 flex items-center gap-4 text-left hover:bg-gray-200 transition-colors"
               >
                 <div className="w-3 h-3 rounded-full bg-black" />
-                <span className="text-gray-500 text-lg">Toca aquí para comenzar</span>
+                <span className="text-gray-500 text-lg">¿A dónde vas?</span>
               </button>
 
               {/* Promo Banner */}
-              <div className="bg-[#CDDC39] rounded-2xl p-4 flex items-center gap-4">
+              <div className="bg-[#FF6B00] rounded-2xl p-4 flex items-center gap-4">
                 <div className="text-5xl">🎉</div>
                 <div>
-                  <p className="font-bold text-[#1a1f36] text-lg">¡Comparte y gana!</p>
-                  <p className="text-sm text-[#1a1f36]/70">Refiere a tus amigos y gana sin limites</p>
+                  <p className="font-bold text-white text-lg">¡Comparte y gana!</p>
+                  <p className="text-sm text-white/80">Refiere a tus amigos y gana sin limites</p>
                 </div>
               </div>
             </div>
 
             {/* Pagination Dots */}
             <div className="flex justify-center gap-2 pb-6">
-              <div className="w-8 h-2 rounded-full bg-[#1a1f36]" />
+              <div className="w-8 h-2 rounded-full bg-[#FF6B00]" />
               <div className="w-2 h-2 rounded-full bg-gray-300" />
             </div>
           </div>
@@ -356,43 +430,92 @@ export default function PassengerDashboard() {
               {/* Origin */}
               <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
                 <div className="w-3 h-3 rounded-full bg-black" />
-                <input
-                  type="text"
-                  value={origin?.name || ''}
-                  onChange={(e) => setOrigin(prev => ({ ...prev, name: e.target.value }))}
-                  onFocus={() => setSelectingField('origin')}
-                  placeholder="Origen"
-                  className="flex-1 text-base bg-transparent outline-none"
-                />
-                <button className="text-gray-400">
+                <div className="flex-1">
+                  <p className="text-xs text-gray-400 mb-1">Origen</p>
+                  <p className="text-sm font-medium text-gray-800">{origin?.name || 'Seleccionar origen'}</p>
+                </div>
+                <button 
+                  onClick={() => setSelectingField('origin')}
+                  className="text-gray-400 hover:text-gray-600"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 </button>
               </div>
 
-              {/* Destination */}
-              <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
-                <div className="w-3 h-3 rounded-full bg-[#CDDC39]" />
-                <input
-                  type="text"
-                  value={destination?.name || ''}
-                  onChange={(e) => setDestination(prev => prev ? { ...prev, name: e.target.value } : null)}
-                  onFocus={() => setSelectingField('destination')}
-                  placeholder="Ingrese el destino"
-                  className="flex-1 text-base bg-transparent outline-none"
-                />
-                <button className="text-gray-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+              {/* Destination Input */}
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-[#FF6B00]" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setSelectingField('destination')}
+                    placeholder="¿A dónde vas?"
+                    className="flex-1 text-base bg-transparent outline-none"
+                  />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => {
+                        setSearchQuery('')
+                        setSearchSuggestions([])
+                      }}
+                      className="text-gray-400"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Loading indicator */}
+                {isSearchingPlaces && (
+                  <div className="mt-3 flex items-center gap-2 text-gray-500">
+                    <div className="w-4 h-4 border-2 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm">Buscando lugares...</span>
+                  </div>
+                )}
+
+                {/* Search Suggestions */}
+                {searchSuggestions.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {searchSuggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSelectSuggestion(suggestion)}
+                        className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl text-left transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-[#FF6B00]" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{suggestion.name.split(',')[0]}</p>
+                          <p className="text-xs text-gray-500 truncate">{suggestion.name}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Map Selection Button */}
+                <button
+                  onClick={() => setSelectingField('destination')}
+                  className="w-full mt-3 bg-[#FF6B00] rounded-2xl py-3 text-white font-bold text-sm flex items-center justify-center gap-2"
+                >
+                  📍 Señalar la ubicación en el mapa
                 </button>
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button className="flex-1 border border-gray-300 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-medium">
-                  <span>⭐</span> Agrega lugar favorito
+                  <span>⭐</span> Lugar favorito
                 </button>
                 <div className="relative">
                   <button 
@@ -423,45 +546,38 @@ export default function PassengerDashboard() {
                 </div>
               </div>
 
-              {/* Map Selection Button */}
-              <button
-                onClick={() => setSelectingField('destination')}
-                className="w-full bg-[#CDDC39] rounded-2xl py-4 text-[#1a1f36] font-bold text-base flex items-center justify-center gap-2"
-              >
-                📍 Señalar la ubicación en el mapa
-              </button>
-
-              {/* Recent Locations */}
-              <div className="space-y-2">
-                {[
-                  { name: 'Vereda 5', address: 'Cerritos Blancos, Parroquia Juan de Villegas', icon: '🕐' },
-                  { name: 'Cerritos Blancos', address: 'Barquisimeto, Lara, Venezuela', icon: '🕐' },
-                  { name: 'Asociación Venezolana Centro O', address: 'Barquisimeto, Lara, Venezuela', icon: '🕐' },
-                ].map((loc, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setDestination({ name: `${loc.name}, ${loc.address}`, lat: 0, lng: 0 })
-                      setPanelView('vehicles')
-                    }}
-                    className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl text-left transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-lg">{loc.icon}</span>
-                    </div>
-                    <div>
-                      <p className="text-base font-bold text-gray-800">{loc.name}</p>
-                      <p className="text-sm text-gray-500 truncate">{loc.address}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              {/* Search History */}
+              {searchHistory.length > 0 && !searchQuery && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">Recientes</p>
+                  {searchHistory.slice(0, 5).map((place, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSelectFromHistory(place)}
+                      className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl text-left transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <span className="text-lg">🕐</span>
+                      </div>
+                      <div>
+                        <p className="text-base font-bold text-gray-800">{place.name.split(',')[0]}</p>
+                        <p className="text-sm text-gray-500 truncate">{place.name}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Bottom Buttons */}
             <div className="p-5 flex gap-4 border-t">
               <button
-                onClick={() => setPanelView('home')}
+                onClick={() => {
+                  setPanelView('home')
+                  setSearchQuery('')
+                  setSearchSuggestions([])
+                  setSelectingField(null)
+                }}
                 className="flex-1 border-2 border-[#1a1f36] rounded-2xl py-4 font-bold text-[#1a1f36]"
               >
                 Volver
@@ -471,6 +587,7 @@ export default function PassengerDashboard() {
                   if (destination) setPanelView('vehicles')
                 }}
                 className="flex-1 bg-[#1a1f36] text-white rounded-2xl py-4 font-bold"
+                disabled={!destination}
               >
                 Confirmar viaje
               </button>
@@ -489,7 +606,7 @@ export default function PassengerDashboard() {
                   <p className="text-sm truncate flex-1">{origin?.name || 'Origen'}</p>
                 </div>
                 <div className="flex items-center gap-3 p-3 border-t">
-                  <div className="w-3 h-3 rounded-full bg-[#CDDC39]" />
+                  <div className="w-3 h-3 rounded-full bg-[#FF6B00]" />
                   <p className="text-sm truncate flex-1 text-gray-500">{destination?.name || 'Destino'}</p>
                 </div>
               </div>
@@ -523,10 +640,10 @@ export default function PassengerDashboard() {
                       setCustomPrice(discountedPrice)
                       setPanelView('vehicleDetail')
                     }}
-                    className="min-w-[160px] bg-gray-50 rounded-2xl p-5 text-left border-2 border-transparent hover:border-[#CDDC39] transition-all"
+                    className="min-w-[160px] bg-gray-50 rounded-2xl p-5 text-left border-2 border-transparent hover:border-[#FF6B00] transition-all"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs bg-[#CDDC39] text-[#1a1f36] px-3 py-1 rounded-full font-bold">-5%</span>
+                      <span className="text-xs bg-[#FF6B00] text-white px-3 py-1 rounded-full font-bold">-5%</span>
                     </div>
                     <p className="font-bold text-lg">{vehicle.name}</p>
                     <p className="text-sm text-gray-500">👤 {vehicle.capacity}</p>
@@ -565,7 +682,7 @@ export default function PassengerDashboard() {
         {panelView === 'vehicleDetail' && selectedVehicle && (
           <div>
             <div className="p-5">
-              {/* Header with close button */}
+              {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-2xl font-bold">{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
@@ -594,7 +711,7 @@ export default function PassengerDashboard() {
                     <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                       <span>⚡</span> Más rápido
                     </span>
-                    <span className="bg-[#CDDC39] text-[#1a1f36] px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <span className="bg-[#FF6B00] text-white px-2 py-1 rounded-full text-xs font-bold">5%</span>
                     <button className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold">
                       Solicitar Rápido
                     </button>
@@ -612,7 +729,7 @@ export default function PassengerDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#CDDC39] text-[#1a1f36] px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <span className="bg-[#FF6B00] text-white px-2 py-1 rounded-full text-xs font-bold">5%</span>
                     <button 
                       onClick={() => {
                         setCustomPrice((rideEstimate?.estimatedFare || 1.0) * 0.95)
@@ -636,7 +753,7 @@ export default function PassengerDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#CDDC39] text-[#1a1f36] px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <span className="bg-[#FF6B00] text-white px-2 py-1 rounded-full text-xs font-bold">5%</span>
                     <button 
                       onClick={() => setPanelView('ride')}
                       className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold"
@@ -687,14 +804,14 @@ export default function PassengerDashboard() {
                 <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={() => setCustomPrice(prev => Math.max(prev - 0.19, 0.50))}
-                    className="bg-[#CDDC39] text-[#1a1f36] px-6 py-3 rounded-2xl font-bold text-lg"
+                    className="bg-[#FF6B00] text-white px-6 py-3 rounded-2xl font-bold text-lg"
                   >
                     –$0.19
                   </button>
                   <span className="text-xl font-bold px-4">{customPrice.toFixed(2)} $</span>
                   <button
                     onClick={() => setCustomPrice(prev => prev + 0.19)}
-                    className="bg-[#CDDC39] text-[#1a1f36] px-6 py-3 rounded-2xl font-bold text-lg"
+                    className="bg-[#FF6B00] text-white px-6 py-3 rounded-2xl font-bold text-lg"
                   >
                     +$0.19
                   </button>
