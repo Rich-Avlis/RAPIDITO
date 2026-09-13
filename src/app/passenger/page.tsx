@@ -67,6 +67,21 @@ export default function PassengerDashboard() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  // Referral & Discount state
+  const [promoCode, setPromoCode] = useState('')
+  const [promoModalOpen, setPromoModalOpen] = useState(false)
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number; ridesLeft: number } | null>(null)
+  const [referralData, setReferralData] = useState<{ referralCode: string; referralsMade: number; ridesCompleted: number } | null>(null)
+  const [showReferralModal, setShowReferralModal] = useState(false)
+  const [copySuccess, setCopySuccess] = useState(false)
+
+  // Ride state
+  const [isRequestingRide, setIsRequestingRide] = useState(false)
+  const [activeRide, setActiveRide] = useState<any>(null)
+  const [showRatingModal, setShowRatingModal] = useState(false)
+  const [rating, setRating] = useState(5)
+  const [ratingComment, setRatingComment] = useState('')
+
   // Load search history from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('rapidito_search_history')
@@ -76,6 +91,36 @@ export default function PassengerDashboard() {
       } catch {}
     }
   }, [])
+
+  // Load referral data
+  useEffect(() => {
+    const loadReferralData = async () => {
+      try {
+        const res = await fetch('/api/referral')
+        const data = await res.json()
+        if (data.success) {
+          setReferralData(data.data)
+          // Auto-apply first ride discount if eligible
+          if (data.data.firstRideDiscountsAvailable > 0 && !appliedPromo) {
+            setAppliedPromo({ code: 'FIRST_RIDE', discount: 5, ridesLeft: data.data.firstRideDiscountsAvailable })
+          }
+        }
+      } catch {}
+    }
+    if (user) loadReferralData()
+  }, [user])
+
+  // Calculate discount
+  const getDiscount = () => {
+    if (appliedPromo) {
+      return appliedPromo.discount
+    }
+    // Default: 5% for first 2 rides
+    if (referralData && referralData.ridesCompleted < 2) {
+      return 5
+    }
+    return 0
+  }
 
   // Save to search history
   const addToHistory = (place: SearchSuggestion) => {
@@ -132,6 +177,115 @@ export default function PassengerDashboard() {
       }
     } catch (error) {
       console.error('Error searching drivers:', error)
+    }
+  }
+
+  // Request ride
+  const requestRide = async () => {
+    if (!origin || !destination || !selectedVehicle || isRequestingRide) return
+    
+    setIsRequestingRide(true)
+    try {
+      const response = await fetch('/api/rides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originAddress: origin.name,
+          originLat: origin.lat,
+          originLng: origin.lng,
+          destAddress: destination.name,
+          destLat: destination.lat,
+          destLng: destination.lng,
+          estimatedFare: customPrice,
+          vehicleTypeId: selectedVehicle,
+        }),
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setActiveRide(data.data.ride)
+        alert('¡Viaje solicitado! Buscando conductor cercano...')
+        setPanelView('home')
+        setDestination(null)
+        setSelectedVehicle(null)
+        setRideEstimate(null)
+      } else {
+        alert(data.error || 'Error al solicitar viaje')
+      }
+    } catch (error) {
+      console.error('Error requesting ride:', error)
+      alert('Error al solicitar viaje')
+    } finally {
+      setIsRequestingRide(false)
+    }
+  }
+
+  // Apply promo code
+  const applyPromoCode = async () => {
+    if (!promoCode) return
+    
+    try {
+      const response = await fetch('/api/referral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode }),
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setAppliedPromo({
+          code: promoCode,
+          discount: data.data.discountPercentage,
+          ridesLeft: data.data.totalRides
+        })
+        setPromoModalOpen(false)
+        setPromoCode('')
+        alert(`¡Código aplicado! ${data.data.discountPercentage}% de descuento en ${data.data.totalRides} viajes`)
+      } else {
+        alert(data.error || 'Código inválido')
+      }
+    } catch (error) {
+      console.error('Error applying promo:', error)
+      alert('Error al aplicar código')
+    }
+  }
+
+  // Copy referral code
+  const copyReferralCode = () => {
+    if (referralData?.referralCode) {
+      navigator.clipboard.writeText(referralData.referralCode)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    }
+  }
+
+  // Submit rating
+  const submitRating = async () => {
+    if (!activeRide) return
+    
+    try {
+      const response = await fetch('/api/ratings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rideId: activeRide.id,
+          score: rating,
+          comment: ratingComment || undefined,
+        }),
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setShowRatingModal(false)
+        setRating(5)
+        setRatingComment('')
+        setActiveRide(null)
+        alert('¡Gracias por tu calificación!')
+      } else {
+        alert(data.error || 'Error al calificar')
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error)
     }
   }
 
@@ -237,9 +391,8 @@ export default function PassengerDashboard() {
   }
 
   const vehicleTypes = [
-    { id: 'moto', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min', image: '🛵' },
-    { id: 'car', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min', image: '🚙' },
-    { id: 'comfort', name: 'Confort', capacity: 4, icon: '🚙', priceMultiplier: 2.1, eta: '7 min', image: '🚘' },
+    { id: '2db9fd01-760d-4561-bd92-bb85e62c5c04', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min', image: '🛵' },
+    { id: 'b3023f91-f02b-4d23-a37f-60c075da3a23', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min', image: '🚙' },
   ]
 
   const mapMarkers = [
@@ -303,11 +456,9 @@ export default function PassengerDashboard() {
 
               <nav className="space-y-2">
                 {[
-                  { icon: '🕐', label: 'Historial' },
-                  { icon: '💰', label: 'Billetera ($0)' },
-                  { icon: '🎧', label: 'Soporte Técnico' },
-                  { icon: '👥', label: 'Referidos' },
-                  { icon: '❤️', label: 'Conductores favoritos' },
+                  { icon: '🕐', label: 'Historial', action: () => alert('Historial de viajes próximamente') },
+                  { icon: '💰', label: `Billetera ($${referralData?.ridesCompleted ? (referralData.ridesCompleted * 0.5).toFixed(2) : '0'})`, action: () => alert('Billetera próximamente') },
+                  { icon: '🎁', label: 'Referidos', action: () => { setShowReferralModal(true); setSidebarOpen(false) } },
                   { icon: '🎨', label: 'Estilo y tema', action: () => setThemeMenuOpen(!themeMenuOpen) },
                 ].map((item) => (
                   <div key={item.label}>
@@ -703,16 +854,42 @@ export default function PassengerDashboard() {
 
             {/* Promo Code */}
             <div className="p-4">
-              <button className="rounded-2xl px-5 py-3 text-sm font-bold flex items-center gap-2" style={{ backgroundColor: t.accent, color: t.primaryText }}>
-                🎫 Agregar código
-              </button>
+              {appliedPromo ? (
+                <div className="rounded-2xl px-5 py-3 flex items-center justify-between" style={{ backgroundColor: t.primary + '20' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎫</span>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: t.primary }}>{appliedPromo.code === 'FIRST_RIDE' ? 'Descuento primer viaje' : `Código: ${appliedPromo.code}`}</p>
+                      <p className="text-xs" style={{ color: t.textSecondary }}>{appliedPromo.discount}% - {appliedPromo.ridesLeft} viajes restantes</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setAppliedPromo(null)}
+                    className="p-1 rounded-full"
+                    style={{ backgroundColor: t.bgTertiary }}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.textSecondary }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setPromoModalOpen(true)}
+                  className="w-full rounded-2xl px-5 py-3 text-sm font-bold flex items-center gap-2 justify-center" 
+                  style={{ backgroundColor: t.accent, color: t.primaryText }}
+                >
+                  🎫 Agregar código de descuento
+                </button>
+              )}
             </div>
 
             {/* Vehicle Options */}
             <div className="px-4 pb-4 flex gap-4 overflow-x-auto">
               {vehicleTypes.map((vehicle) => {
-                const price = (rideEstimate?.estimatedFare || 1.0) * vehicle.priceMultiplier
-                const discountedPrice = price * 0.95
+                const basePrice = (rideEstimate?.estimatedFare || 1.0) * vehicle.priceMultiplier
+                const discount = getDiscount()
+                const discountedPrice = basePrice * (1 - discount / 100)
 
                 return (
                   <button
@@ -726,15 +903,23 @@ export default function PassengerDashboard() {
                     className="min-w-[160px] rounded-2xl p-5 text-left border-2 border-transparent transition-all"
                     style={{ backgroundColor: t.bgTertiary }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-white px-3 py-1 rounded-full font-bold" style={{ backgroundColor: t.primary }}>-5%</span>
-                    </div>
+                    {discount > 0 && (
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-white px-3 py-1 rounded-full font-bold" style={{ backgroundColor: t.primary }}>-{discount}%</span>
+                      </div>
+                    )}
                     <p className="font-bold text-lg" style={{ color: t.text }}>{vehicle.name}</p>
                     <p className="text-sm" style={{ color: t.textSecondary }}>👤 {vehicle.capacity}</p>
                     <div className="text-5xl my-4">{vehicle.image}</div>
                     <div>
-                      <p className="text-sm line-through" style={{ color: t.textSecondary }}>${price.toFixed(2)} –5%</p>
-                      <p className="font-bold text-xl" style={{ color: t.text }}>${discountedPrice.toFixed(2)} ↑</p>
+                      {discount > 0 ? (
+                        <>
+                          <p className="text-sm line-through" style={{ color: t.textSecondary }}>${basePrice.toFixed(2)} –{discount}%</p>
+                          <p className="font-bold text-xl" style={{ color: t.text }}>${discountedPrice.toFixed(2)} ↑</p>
+                        </>
+                      ) : (
+                        <p className="font-bold text-xl" style={{ color: t.text }}>${basePrice.toFixed(2)} ↑</p>
+                      )}
                     </div>
                   </button>
                 )
@@ -848,12 +1033,20 @@ export default function PassengerDashboard() {
                     <p className="font-bold" style={{ color: t.text }}>Selecciona cuánto quieres pagar</p>
                     <p className="text-sm" style={{ color: t.textSecondary }}>Elige tú el precio</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-bold text-lg" style={{ color: t.text }}>${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
-                      <span className="text-sm line-through" style={{ color: t.textSecondary }}>${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
+                      {getDiscount() > 0 ? (
+                        <>
+                          <span className="font-bold text-lg" style={{ color: t.text }}>${((rideEstimate?.estimatedFare || 1.0) * (1 - getDiscount() / 100)).toFixed(2)}</span>
+                          <span className="text-sm line-through" style={{ color: t.textSecondary }}>${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
+                        </>
+                      ) : (
+                        <span className="font-bold text-lg" style={{ color: t.text }}>${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-white px-2 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: t.primary }}>5%</span>
+                    {getDiscount() > 0 && (
+                      <span className="text-white px-2 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: t.primary }}>{getDiscount()}%</span>
+                    )}
                     <button 
                       onClick={() => setPanelView('ride')}
                       className="px-4 py-2 rounded-2xl text-sm font-bold"
@@ -886,13 +1079,15 @@ export default function PassengerDashboard() {
             </div>
 
             {/* Discount Banner */}
-            <div className="text-white p-4 flex items-center justify-between" style={{ backgroundColor: t.primary }}>
-              <span className="font-bold">5% Descuento aplicado</span>
-              <div className="flex items-center gap-2">
-                <span className="line-through text-white/70">${(customPrice / 0.95).toFixed(2)}</span>
-                <span className="font-bold text-xl">${customPrice.toFixed(2)}</span>
+            {getDiscount() > 0 && (
+              <div className="text-white p-4 flex items-center justify-between" style={{ backgroundColor: t.primary }}>
+                <span className="font-bold">{getDiscount()}% Descuento aplicado</span>
+                <div className="flex items-center gap-2">
+                  <span className="line-through text-white/70">${(customPrice / (1 - getDiscount() / 100)).toFixed(2)}</span>
+                  <span className="font-bold text-xl">${customPrice.toFixed(2)}</span>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="p-5">
               {/* Vehicle Info */}
@@ -936,13 +1131,144 @@ export default function PassengerDashboard() {
               </div>
 
               {/* Start Ride Button */}
-              <button className="w-full rounded-2xl py-5 font-bold mt-6 text-xl" style={{ backgroundColor: t.accent, color: t.primaryText }}>
-                Comenzar viaje
+              <button 
+                onClick={requestRide}
+                disabled={isRequestingRide}
+                className="w-full rounded-2xl py-5 font-bold mt-6 text-xl disabled:opacity-50" 
+                style={{ backgroundColor: t.accent, color: t.primaryText }}
+              >
+                {isRequestingRide ? 'Buscando conductor...' : 'Comenzar viaje'}
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Promo Code Modal */}
+      {promoModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setPromoModalOpen(false)}>
+          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
+            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Agregar código de descuento</h3>
+            
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="Escribe tu código"
+                className="flex-1 rounded-2xl px-4 py-3 text-sm"
+                style={{ backgroundColor: t.bgTertiary, color: t.text }}
+              />
+              <button
+                onClick={applyPromoCode}
+                disabled={!promoCode}
+                className="rounded-2xl px-6 py-3 font-bold disabled:opacity-50"
+                style={{ backgroundColor: t.accent, color: t.primaryText }}
+              >
+                Aplicar
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="rounded-2xl p-4" style={{ backgroundColor: t.bgTertiary }}>
+                <p className="text-sm" style={{ color: t.textSecondary }}>
+                  <strong style={{ color: t.text }}>Código de referido:</strong> Pide a un amigo que te comparta su código. Ambos ganan 10% de descuento en 2 viajes.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Referral Modal */}
+      {showReferralModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowReferralModal(false)}>
+          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
+            <h3 className="text-xl font-bold mb-2" style={{ color: t.text }}>Comparte y gana</h3>
+            <p className="text-sm mb-4" style={{ color: t.textSecondary }}>Invita a amigos y ambos ganan 10% de descuento en 2 viajes</p>
+            
+            <div className="rounded-2xl p-4 flex items-center justify-between mb-4" style={{ backgroundColor: t.bgTertiary }}>
+              <div>
+                <p className="text-xs" style={{ color: t.textSecondary }}>Tu código</p>
+                <p className="text-lg font-bold" style={{ color: t.text }}>{referralData?.referralCode || 'Cargando...'}</p>
+              </div>
+              <button
+                onClick={copyReferralCode}
+                className="px-4 py-2 rounded-2xl font-bold"
+                style={{ backgroundColor: copySuccess ? '#22C55E' : t.accent, color: 'white' }}
+              >
+                {copySuccess ? '¡Copiado!' : 'Copiar'}
+              </button>
+            </div>
+
+            <div className="space-y-2 text-sm" style={{ color: t.textSecondary }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">👥</span>
+                <span>{referralData?.referralsMade || 0} amigos invitados</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🚗</span>
+                <span>{referralData?.ridesCompleted || 0} viajes completados</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'RAPIDITO',
+                    text: `Usa mi código ${referralData?.referralCode} para obtener 10% de descuento en tus primeros 2 viajes en RAPIDITO!`,
+                  })
+                }
+              }}
+              className="w-full mt-4 rounded-2xl py-3 font-bold"
+              style={{ backgroundColor: t.primary, color: 'white' }}
+            >
+              📱 Compartir código
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]" onClick={() => setShowRatingModal(false)}>
+          <div className="w-full max-w-md rounded-3xl p-6 mx-4" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold mb-4 text-center" style={{ color: t.text }}>Califica tu viaje</h3>
+            
+            <div className="flex justify-center gap-2 mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className="text-4xl"
+                >
+                  {star <= rating ? '⭐' : '☆'}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              placeholder="Comentario opcional..."
+              className="w-full rounded-2xl px-4 py-3 text-sm mb-4"
+              style={{ backgroundColor: t.bgTertiary, color: t.text }}
+              rows={3}
+            />
+
+            <button
+              onClick={submitRating}
+              className="w-full rounded-2xl py-3 font-bold"
+              style={{ backgroundColor: t.accent, color: t.primaryText }}
+            >
+              Enviar calificación
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
