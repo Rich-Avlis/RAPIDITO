@@ -565,7 +565,7 @@ export default function PassengerDashboard() {
               <nav className="space-y-2">
                 {[
                   { icon: '🕐', label: 'Historial', action: () => window.location.href = '/passenger/history' },
-                  { icon: '💰', label: 'Billetera', action: () => setShowWalletModal(true) },
+                  { icon: '💰', label: 'Mi Cartera', action: () => setShowWalletModal(true) },
                   { icon: '📅', label: 'Viajes programados', action: () => setShowScheduledModal(true) },
                   { icon: '🎁', label: 'Referidos', action: () => { setShowReferralModal(true); setSidebarOpen(false) } },
                   { icon: '🎧', label: 'Ayuda y Soporte', action: () => window.location.href = '/passenger/support' },
@@ -701,7 +701,7 @@ export default function PassengerDashboard() {
                 style={{ backgroundColor: t.bgTertiary }}
               >
                 <div className="w-3 h-3 rounded-full bg-black" />
-                <span className="text-lg" style={{ color: t.textSecondary }}>¿A dónde vas?</span>
+                <span className="text-lg" style={{ color: t.textSecondary }}>Pa' donde vas</span>
               </button>
 
               {/* Promo Banner */}
@@ -741,7 +741,7 @@ export default function PassengerDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <p className="font-bold" style={{ color: t.text }}>¿A dónde vas?</p>
+              <p className="font-bold" style={{ color: t.text }}>Pa' donde vas</p>
             </div>
 
             <div className="p-5 space-y-4">
@@ -772,7 +772,7 @@ export default function PassengerDashboard() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setSelectingField('destination')}
-                    placeholder="¿A dónde vas?"
+                    placeholder="Pa' donde vas"
                     className="flex-1 text-base bg-transparent outline-none"
                     style={{ color: t.text }}
                   />
@@ -1381,17 +1381,26 @@ export default function PassengerDashboard() {
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowWalletModal(false)}>
           <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
-            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Mi Billetera</h3>
+            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Mi Cartera</h3>
             
             <div className="rounded-2xl p-6 text-center mb-4" style={{ backgroundColor: t.primary }}>
               <p className="text-white/80 text-sm">Saldo disponible</p>
               <p className="text-4xl font-bold text-white">${walletBalance.toFixed(2)}</p>
             </div>
 
+            {/* Pago Móvil data */}
+            <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: t.bgTertiary }}>
+              <p className="text-sm font-bold mb-2" style={{ color: t.text }}>📱 Para recargar tu cartera:</p>
+              <div className="space-y-1 text-sm" style={{ color: t.textSecondary }}>
+                <p><strong>Banco:</strong> 0102</p>
+                <p><strong>Teléfono:</strong> 04125203740</p>
+                <p><strong>Cédula:</strong> 29673250</p>
+                <p><strong>Nombre:</strong> Rapidito C.A.</p>
+              </div>
+              <p className="text-xs mt-2" style={{ color: t.textSecondary }}>Después de transferir, envía el comprobante por Telegram</p>
+            </div>
+
             <div className="space-y-2">
-              <button className="w-full rounded-2xl py-3 font-bold" style={{ backgroundColor: t.accent, color: t.primaryText }}>
-                💳 Recargar billetera
-              </button>
               <button className="w-full rounded-2xl py-3 font-bold border-2" style={{ borderColor: t.border, color: t.text }}>
                 📊 Ver movimientos
               </button>
@@ -1468,14 +1477,13 @@ export default function PassengerDashboard() {
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowPaymentModal(false)}>
           <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
-            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Método de pago</h3>
+            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>¿Cómo vas a pagar?</h3>
             
             <div className="space-y-2">
               {[
-                { id: 'cash', name: 'Efectivo', icon: '💵', desc: 'Paga al conductor' },
-                { id: 'pago_movil', name: 'Pago Móvil', icon: '📱', desc: 'Transferencia bancaria' },
-                { id: 'zelle', name: 'Zelle', icon: '💸', desc: 'Pago electrónico USD' },
-                { id: 'wallet', name: 'Billetera RAPIDITO', icon: '💰', desc: `Saldo: $${walletBalance.toFixed(2)}` },
+                { id: 'cash', name: 'Efectivo', icon: '💵', desc: 'Paga al conductor cuando te subas' },
+                { id: 'pago_movil', name: 'Pago Móvil / Transferencia', icon: '📱', desc: 'Banco 0102 • Teléfono 04125203740' },
+                { id: 'cartera', name: 'Cartera RAPIDITO', icon: '💰', desc: `Saldo: $${walletBalance.toFixed(2)}` },
               ].map((method) => (
                 <button
                   key={method.id}

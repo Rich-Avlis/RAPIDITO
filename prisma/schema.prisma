@@ -47,6 +47,9 @@ model User {
   referralsReceived Referral[]       @relation("ReferredReferrals")
   loyaltyAccount    LoyaltyAccount?
   paymentProofs     PaymentProof[]
+  messagesSent      Message[]
+  identityDocuments IdentityDocument[]
+  orders            Order[]          @relation("CustomerOrders")
 
   @@index([phone])
   @@index([email])
@@ -133,6 +136,7 @@ model DriverProfile {
   negotations     RideNegotiation[]
   ratingsGiven    Rating[]         @relation("DriverRaterRatings")
   ratingsReceived Rating[]         @relation("DriverRatedRatings")
+  deliveredOrders Order[]          @relation("DriverOrders")
 
   @@index([isOnline])
   @@index([currentLat, currentLng])
@@ -257,6 +261,7 @@ model Ride {
   payment    Payment?
   ratings    Rating[]
   negotiation RideNegotiation?
+  messages   Message[]
 
   @@index([passengerId])
   @@index([driverId])
@@ -640,4 +645,78 @@ model ServiceType {
   displayName String
   description String?
   isActive    Boolean @default(true)
+}
+
+// ==========================================
+// MESSAGING
+// ==========================================
+
+model Message {
+  id        String   @id @default(uuid())
+  rideId    String
+  senderId  String
+  content   String
+  type      String   @default("TEXT") // TEXT, IMAGE, LOCATION, SYSTEM
+  createdAt DateTime @default(now())
+
+  ride   Ride   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id])
+
+  @@index([rideId, createdAt])
+  @@index([senderId])
+}
+
+// ==========================================
+// IDENTITY VERIFICATION
+// ==========================================
+
+model IdentityDocument {
+  id            String   @id @default(uuid())
+  userId        String
+  documentType  String   // LICENSE, ID_CARD, PASSPORT, SOAT, VEHICLE_REGISTRATION
+  documentNumber String
+  frontPhoto    String
+  backPhoto     String?
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason String?
+  verifiedById  String?
+  verifiedAt    DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  customerId      String
+  driverId        String?
+  status          String   @default("PENDING") // PENDING, ACCEPTED, PICKING_UP, IN_DELIVERY, DELIVERED, CANCELLED
+  originAddress   String
+  originLat       Float
+  originLng       Float
+  destAddress     String
+  destLat         Float
+  destLng         Float
+  description     String?
+  estimatedFare   Float
+  finalFare       Float?
+  distanceKm      Float?
+  durationMinutes Float?
+  requestedAt     DateTime @default(now())
+  acceptedAt      DateTime?
+  pickedUpAt      DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+
+  customer User          @relation("CustomerOrders", fields: [customerId], references: [id])
+  driver   DriverProfile? @relation("DriverOrders", fields: [driverId], references: [id])
+
+  @@index([customerId])
+  @@index([driverId])
+  @@index([status])
 }

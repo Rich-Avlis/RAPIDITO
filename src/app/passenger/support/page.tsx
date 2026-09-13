@@ -39,7 +39,6 @@ export default function PassengerSupport() {
   }
 
   const categories = [...new Set(faq.map(f => f.category))]
-
   const filteredFAQ = selectedCategory ? faq.filter(f => f.category === selectedCategory) : faq
 
   const submitTicket = async () => {
@@ -53,7 +52,7 @@ export default function PassengerSupport() {
       })
       const data = await res.json()
       if (data.success) {
-        alert('¡Ticket enviado! Responderemos en menos de 24 horas.')
+        alert('¡Ticket enviado! Te respondemos rapidito.')
         setShowContactForm(false)
         setSubject('')
         setMessage('')
@@ -85,17 +84,17 @@ export default function PassengerSupport() {
           style={{ backgroundColor: t.primary }}
         >
           <span className="text-2xl">💬</span>
-          <p className="text-sm font-bold text-white mt-2">Contactar Soporte</p>
+          <p className="text-sm font-bold text-white mt-2">Crear Ticket</p>
         </button>
         <a
-          href="https://wa.me/584125203740"
+          href="https://t.me/rapiditosupport"
           target="_blank"
           rel="noopener noreferrer"
           className="rounded-2xl p-4 text-center"
-          style={{ backgroundColor: '#25D366' }}
+          style={{ backgroundColor: '#0088cc' }}
         >
           <span className="text-2xl">📱</span>
-          <p className="text-sm font-bold text-white mt-2">WhatsApp</p>
+          <p className="text-sm font-bold text-white mt-2">Telegram</p>
         </a>
       </div>
 
@@ -153,13 +152,13 @@ export default function PassengerSupport() {
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowContactForm(false)}>
           <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
-            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Contactar Soporte</h3>
+            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Crear Ticket de Soporte</h3>
             
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Asunto"
+              placeholder="¿Qué pasó, chamo?"
               className="w-full rounded-2xl px-4 py-3 text-sm mb-3"
               style={{ backgroundColor: t.bgTertiary, color: t.text }}
             />
@@ -167,7 +166,7 @@ export default function PassengerSupport() {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Describe tu problema..."
+              placeholder="Cuéntanos más..."
               className="w-full rounded-2xl px-4 py-3 text-sm mb-4"
               style={{ backgroundColor: t.bgTertiary, color: t.text }}
               rows={4}

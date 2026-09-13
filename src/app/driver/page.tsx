@@ -195,7 +195,7 @@ export default function DriverDashboard() {
                 </Link>
                 <Link href="/driver/wallet">
                   <Button variant="outline" className="w-full justify-start">
-                    💰 Mi Billetera
+                    💰 Mi Cartera
                   </Button>
                 </Link>
                 <Link href="/driver/history">
