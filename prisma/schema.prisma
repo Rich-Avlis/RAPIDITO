@@ -1,0 +1,643 @@
+// RAPIDITO - Prisma Schema
+// Ride-hailing platform for Venezuela
+// Using SQLite for development - switch to PostgreSQL for production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// CORE MODELS
+// ==========================================
+
+model User {
+  id            String   @id @default(uuid())
+  email         String?  @unique
+  phone         String   @unique
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  profilePhoto  String?
+  role          String   @default("PASSENGER") // PASSENGER, DRIVER, ADMIN, SUPPORT, DOCUMENT_VERIFIER, SUPER_ADMIN
+  isActive      Boolean  @default(true)
+  isVerified    Boolean  @default(false)
+  referralCode  String   @unique @default(uuid())
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  passengerProfile  PassengerProfile?
+  driverProfile     DriverProfile?
+  sessions          Session[]
+  refreshTokens     RefreshToken[]
+  ratingsGiven      Rating[]         @relation("RaterRatings")
+  ratingsReceived   Rating[]         @relation("RatedRatings")
+  notifications     Notification[]
+  supportTickets    SupportTicket[]
+  auditLogs         AuditLog[]
+  consents          Consent[]
+  emergencyContacts EmergencyContact[]
+  referralsMade     Referral[]       @relation("ReferrerReferrals")
+  referralsReceived Referral[]       @relation("ReferredReferrals")
+  loyaltyAccount    LoyaltyAccount?
+  paymentProofs     PaymentProof[]
+
+  @@index([phone])
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  purpose   String   // "registration", "login", "password_reset"
+  isUsed    Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, purpose])
+  @@index([code])
+}
+
+// ==========================================
+// PROFILE MODELS
+// ==========================================
+
+model PassengerProfile {
+  id        String  @id @default(uuid())
+  userId    String  @unique
+  tripCount Int     @default(0)
+  points    Int     @default(0)
+  level     String  @default("BRONZE")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rides Ride[]
+}
+
+model DriverProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  isOnline       String   @default("OFFLINE") // OFFLINE, ONLINE, BUSY
+  isAvailable    Boolean  @default(true)
+  currentLat     Float?
+  currentLng     Float?
+  tripCount      Int      @default(0)
+  completedTrips Int      @default(0)
+  rating         Float    @default(5.0)
+  totalRatings   Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations
+  vehicle         Vehicle?
+  documents       DriverDocument[]
+  rides           Ride[]
+  wallet          DriverWallet?
+  negotations     RideNegotiation[]
+  ratingsGiven    Rating[]         @relation("DriverRaterRatings")
+  ratingsReceived Rating[]         @relation("DriverRatedRatings")
+
+  @@index([isOnline])
+  @@index([currentLat, currentLng])
+}
+
+// ==========================================
+// VEHICLE MODELS
+// ==========================================
+
+model VehicleType {
+  id          String  @id @default(uuid())
+  name        String  @unique // "moto", "car", "bicycle"
+  displayName String
+  isActive    Boolean @default(true)
+
+  vehicles Vehicle[]
+}
+
+model Vehicle {
+  id            String   @id @default(uuid())
+  driverId      String   @unique
+  vehicleTypeId String
+  brand         String
+  model         String
+  year          Int?
+  color         String
+  plateNumber   String
+  photoFront    String?
+  photoBack     String?
+  photoSide     String?
+  isActive      Boolean  @default(true)
+
+  driver    DriverProfile    @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  type      VehicleType      @relation(fields: [vehicleTypeId], references: [id])
+  documents VehicleDocument[]
+}
+
+// ==========================================
+// DOCUMENT MODELS
+// ==========================================
+
+model DriverDocument {
+  id              String   @id @default(uuid())
+  driverId        String
+  documentType    String   // "cedula", "license", "medical_certificate"
+  fileName        String
+  fileUrl         String
+  status          String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED, EXPIRED, SUSPENDED
+  rejectionReason String?
+  verifiedById    String?
+  verifiedAt      DateTime?
+  expiresAt       DateTime?
+  qualityScore    Float?
+  metadata        String?  // JSON as string for SQLite
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId, documentType])
+  @@index([status])
+}
+
+model VehicleDocument {
+  id              String   @id @default(uuid())
+  vehicleId       String
+  documentType    String   // "soat", "vehicle_registration", "tax_receipt"
+  fileName        String
+  fileUrl         String
+  status          String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED, EXPIRED, SUSPENDED
+  rejectionReason String?
+  verifiedById    String?
+  verifiedAt      DateTime?
+  expiresAt       DateTime?
+  qualityScore    Float?
+  metadata        String?  // JSON as string for SQLite
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, documentType])
+  @@index([status])
+}
+
+// ==========================================
+// RIDE MODELS
+// ==========================================
+
+model Ride {
+  id              String   @id @default(uuid())
+  passengerId     String
+  driverId        String?
+  status          String   @default("REQUESTED") // REQUESTED, SEARCHING_DRIVER, DRIVER_ASSIGNED, etc.
+
+  // Locations
+  originAddress   String
+  originLat       Float
+  originLng       Float
+  destAddress     String
+  destLat         Float
+  destLng         Float
+
+  // Pricing
+  estimatedFare   Float
+  finalFare       Float?
+  distanceKm      Float?
+  durationMinutes Float?
+
+  // Timing
+  requestedAt     DateTime @default(now())
+  assignedAt      DateTime?
+  arrivedAt       DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+
+  // Relations
+  passenger  PassengerProfile @relation(fields: [passengerId], references: [id])
+  driver     DriverProfile?   @relation(fields: [driverId], references: [id])
+  location   RideLocation?
+  payment    Payment?
+  ratings    Rating[]
+  negotiation RideNegotiation?
+
+  @@index([passengerId])
+  @@index([driverId])
+  @@index([status])
+  @@index([requestedAt])
+  @@index([originLat, originLng])
+}
+
+model RideLocation {
+  id        String   @id @default(uuid())
+  rideId    String   @unique
+  driverLat Float
+  driverLng Float
+  bearing   Float?
+  speed     Float?
+  updatedAt DateTime @default(now())
+
+  ride Ride @relation(fields: [rideId], references: [id], onDelete: Cascade)
+
+  @@index([rideId])
+}
+
+model RideNegotiation {
+  id            String   @id @default(uuid())
+  rideId        String   @unique
+  passengerId   String
+  driverId      String
+  suggestedFare Float
+  offeredFare   Float?
+  counterOffer  Float?
+  status        String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, COUNTERED, EXPIRED, CANCELLED
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  ride   Ride            @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  driver DriverProfile   @relation(fields: [driverId], references: [id])
+
+  @@index([rideId])
+  @@index([status])
+}
+
+// ==========================================
+// PAYMENT MODELS
+// ==========================================
+
+model Payment {
+  id           String   @id @default(uuid())
+  rideId       String   @unique
+  method       String   // CASH, PAGOMOVIL
+  status       String   @default("PENDING") // PENDING, SUBMITTED, VERIFIED, REJECTED
+  amount       Float
+  commission   Float    @default(0)
+  netAmount    Float
+  pagomovilRef String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ride   Ride            @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  proofs PaymentProof[]
+
+  @@index([rideId])
+  @@index([status])
+}
+
+model PaymentProof {
+  id        String   @id @default(uuid())
+  paymentId String
+  userId    String
+  fileUrl   String
+  reference String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+// ==========================================
+// WALLET & COMMISSIONS
+// ==========================================
+
+model DriverWallet {
+  id              String   @id @default(uuid())
+  driverId        String   @unique
+  balance         Float    @default(0)
+  pendingBalance  Float    @default(0)
+  totalEarned     Float    @default(0)
+  totalCommission Float    @default(0)
+  totalWithdrawn  Float    @default(0)
+  updatedAt       DateTime @updatedAt
+
+  driver       DriverProfile      @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+  withdrawals  Withdrawal[]
+
+  @@index([driverId])
+}
+
+model WalletTransaction {
+  id          String   @id @default(uuid())
+  walletId    String
+  type        String   // RIDE_EARNING, COMMISSION, WITHDRAWAL, BONUS, REFUND
+  amount      Float
+  description String
+  rideId      String?
+  createdAt   DateTime @default(now())
+
+  wallet DriverWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([createdAt])
+}
+
+model Withdrawal {
+  id        String   @id @default(uuid())
+  walletId  String
+  amount    Float
+  status    String   @default("PENDING") // PENDING, PROCESSING, PAID, REJECTED, CANCELLED
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet DriverWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([status])
+}
+
+// ==========================================
+// RATINGS & REVIEWS
+// ==========================================
+
+model Rating {
+  id            String   @id @default(uuid())
+  rideId        String
+  raterId       String
+  ratedId       String
+  driverRaterId String?
+  driverRatedId String?
+  score         Int      // 1-5
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  ride        Ride            @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  rater       User            @relation("RaterRatings", fields: [raterId], references: [id])
+  rated       User            @relation("RatedRatings", fields: [ratedId], references: [id])
+  driverRater DriverProfile?  @relation("DriverRaterRatings", fields: [driverRaterId], references: [id])
+  driverRated DriverProfile?  @relation("DriverRatedRatings", fields: [driverRatedId], references: [id])
+
+  @@index([rideId])
+  @@index([raterId])
+  @@index([ratedId])
+}
+
+// ==========================================
+// REFERRALS & LOYALTY
+// ==========================================
+
+model Referral {
+  id              String   @id @default(uuid())
+  referrerId      String
+  referredId      String
+  code            String
+  isFirstTripDone Boolean  @default(false)
+  rewardAmount    Float?
+  createdAt       DateTime @default(now())
+
+  referrer User @relation("ReferrerReferrals", fields: [referrerId], references: [id])
+  referred User @relation("ReferredReferrals", fields: [referredId], references: [id])
+
+  @@index([referrerId])
+  @@index([referredId])
+  @@index([code])
+}
+
+model LoyaltyAccount {
+  id     String @id @default(uuid())
+  userId String @unique
+  points Int    @default(0)
+  level  String @default("BRONZE") // BRONZE, SILVER, GOLD, PREMIUM
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions LoyaltyTransaction[]
+
+  @@index([userId])
+}
+
+model LoyaltyTransaction {
+  id        String   @id @default(uuid())
+  accountId String
+  points    Int
+  type      String   // "earn", "redeem", "expire"
+  source    String   // "ride", "referral", "promotion"
+  rideId    String?
+  createdAt DateTime @default(now())
+
+  account LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+// ==========================================
+// NOTIFICATIONS
+// ==========================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // "ride", "payment", "document", "promotion"
+  data      String?  // JSON as string for SQLite
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// ==========================================
+// SUPPORT & AUDIT
+// ==========================================
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  userId    String
+  subject   String
+  message   String
+  status    String   @default("OPEN")
+  priority  String   @default("NORMAL")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?  // JSON as string for SQLite
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+// ==========================================
+// CONFIGURATION & LEGAL
+// ==========================================
+
+model SystemConfiguration {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   // JSON as string for SQLite
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
+model TariffConfiguration {
+  id               String   @id @default(uuid())
+  zone             String
+  vehicleTypeId    String
+  baseFare         Float
+  minimumFare      Float
+  pricePerKm       Float
+  pricePerMinute   Float
+  zoneMultiplier   Float    @default(1.0)
+  demandMultiplier Float    @default(1.0)
+  nightMultiplier  Float    @default(1.0)
+  negotiationMin   Float
+  negotiationMax   Float
+  isActive         Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+
+  @@index([zone, vehicleTypeId])
+}
+
+model RoutePrice {
+  id            String   @id @default(uuid())
+  originAddress String
+  destAddress   String
+  originLat     Float
+  originLng     Float
+  destLat       Float
+  destLng       Float
+  distanceKm    Float
+  suggestedFare Float
+  minimumFare   Float
+  maximumFare   Float
+  isActive      Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+
+  @@index([originLat, originLng])
+  @@index([destLat, destLng])
+}
+
+model LegalDocument {
+  id        String   @id @default(uuid())
+  type      String   @unique // "terms", "privacy", etc.
+  title     String
+  content   String
+  version   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  consents Consent[]
+}
+
+model Consent {
+  id         String   @id @default(uuid())
+  userId     String
+  documentId String
+  version    String
+  acceptedAt DateTime @default(now())
+  ipAddress  String?
+
+  user     User          @relation(fields: [userId], references: [id])
+  document LegalDocument @relation(fields: [documentId], references: [id])
+
+  @@index([userId])
+  @@index([documentId])
+}
+
+model EmergencyContact {
+  id       String  @id @default(uuid())
+  userId   String
+  name     String
+  phone    String
+  relation String
+  isActive Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ==========================================
+// ZONES & CITIES
+// ==========================================
+
+model City {
+  id       String  @id @default(uuid())
+  name     String  @unique
+  state    String
+  isActive Boolean @default(true)
+
+  zones Zone[]
+}
+
+model Zone {
+  id          String  @id @default(uuid())
+  cityId      String
+  name        String
+  coordinates String  // GeoJSON polygon as string for SQLite
+  isActive    Boolean @default(true)
+
+  city City @relation(fields: [cityId], references: [id])
+}
+
+model ServiceType {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  displayName String
+  description String?
+  isActive    Boolean @default(true)
+}
