@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MapView } from '@/components/map/MapView'
+import dynamic from 'next/dynamic'
+const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
 
 interface AdminStats {
   totalUsers: number
