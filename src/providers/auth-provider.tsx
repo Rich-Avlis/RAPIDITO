@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface User {
@@ -30,11 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    refreshUser()
-  }, [])
-
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me')
       const data = await response.json()
@@ -48,7 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    refreshUser()
+
+    // Refresh session every 10 minutes to keep it alive
+    const interval = setInterval(() => {
+      refreshUser()
+    }, 10 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [refreshUser])
 
   const login = async (phone: string, password: string) => {
     const response = await fetch('/api/auth/login', {
@@ -64,13 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(data.data.user)
     
-    // Redirect based on role
+    // Use window.location for faster redirect (no React re-render lag)
     if (data.data.user.role === 'DRIVER') {
-      router.push('/driver')
+      window.location.href = '/driver'
     } else if (['ADMIN', 'SUPER_ADMIN'].includes(data.data.user.role)) {
-      router.push('/admin')
+      window.location.href = '/admin'
     } else {
-      router.push('/passenger')
+      window.location.href = '/passenger'
     }
   }
 
@@ -87,13 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(data.data.user)
-    router.push('/verify-otp')
+    window.location.href = '/verify-otp'
   }
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     setUser(null)
-    router.push('/')
+    window.location.href = '/'
   }
 
   return (

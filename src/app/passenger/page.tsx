@@ -3,12 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/auth-provider'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import dynamic from 'next/dynamic'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
-import { PlaceSelector } from '@/components/map/PlaceSelector'
 
 interface Driver {
   id: string
@@ -51,14 +47,7 @@ export default function PassengerDashboard() {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
   const [rideEstimate, setRideEstimate] = useState<any>(null)
   const [isSearching, setIsSearching] = useState(false)
-  const [promoCode, setPromoCode] = useState('')
   const [customPrice, setCustomPrice] = useState<number>(0)
-
-  // Recent locations
-  const [recentLocations] = useState<SelectedPlace[]>([
-    { name: 'Plaza Bolívar, Quíbor', lat: 9.3167, lng: -70.6045 },
-    { name: 'Sambil Barquisimeto', lat: 10.0647, lng: -69.3570 },
-  ])
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -174,9 +163,9 @@ export default function PassengerDashboard() {
   }
 
   const vehicleTypes = [
-    { id: 'moto', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0 },
-    { id: 'car', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6 },
-    { id: 'comfort', name: 'Confort', capacity: 4, icon: '🚙', priceMultiplier: 2.1 },
+    { id: 'moto', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min' },
+    { id: 'car', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min' },
+    { id: 'comfort', name: 'Confort', capacity: 4, icon: '🚙', priceMultiplier: 2.1, eta: '7 min' },
   ]
 
   const mapMarkers = [
@@ -228,11 +217,11 @@ export default function PassengerDashboard() {
               </div>
 
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
                   {user.firstName[0]}{user.lastName[0]}
                 </div>
                 <div>
-                  <p className="font-semibold">{user.firstName} {user.lastName}</p>
+                  <p className="font-semibold text-lg">{user.firstName} {user.lastName}</p>
                   <button className="text-xs bg-primary px-3 py-1 rounded-full text-white font-medium">
                     Editar perfil
                   </button>
@@ -241,12 +230,14 @@ export default function PassengerDashboard() {
 
               <nav className="space-y-1">
                 {[
-                  { icon: '🕐', label: 'Historial' },
+                  { icon: '🕐', label: 'Historial de viajes' },
                   { icon: '💰', label: 'Billetera', extra: '($0)' },
-                  { icon: '🎧', label: 'Soporte Técnico' },
-                  { icon: '👥', label: 'Referidos' },
-                  { icon: '❤️', label: 'Conductores favoritos' },
-                  { icon: '🎨', label: 'Estilo y tema' },
+                  { icon: '📍', label: 'Lugares guardados' },
+                  { icon: '⭐', label: 'Favoritos' },
+                  { icon: '🎫', label: 'Códigos promocionales' },
+                  { icon: '👥', label: 'Referidos', extra: '¡Gana $1!' },
+                  { icon: '🎧', label: 'Soporte' },
+                  { icon: '⚙️', label: 'Configuración' },
                 ].map((item) => (
                   <button
                     key={item.label}
@@ -272,8 +263,8 @@ export default function PassengerDashboard() {
         </div>
       )}
 
-      {/* Map (full screen) */}
-      <div className="absolute inset-0">
+      {/* Map (partial - top 45%) */}
+      <div className="absolute inset-0 h-[45%]">
         <MapView
           center={currentLocation ? [currentLocation.lat, currentLocation.lng] : undefined}
           markers={mapMarkers}
@@ -281,6 +272,9 @@ export default function PassengerDashboard() {
           onLocationSelect={selectingField ? handleMapClick : undefined}
         />
       </div>
+
+      {/* Gradient overlay for map */}
+      <div className="absolute top-[40%] left-0 right-0 h-16 bg-gradient-to-b from-transparent to-gray-100 z-[1]" />
 
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4">
@@ -294,92 +288,114 @@ export default function PassengerDashboard() {
             </svg>
           </button>
 
-          {panelView === 'home' && origin && (
-            <div className="bg-white rounded-xl px-4 py-2 shadow-lg flex-1">
-              <p className="text-sm text-gray-500">📍 {origin.name}</p>
-            </div>
-          )}
-
-          {panelView !== 'home' && (
-            <div className="bg-white rounded-xl shadow-lg flex-1 overflow-hidden">
-              <div className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-black" />
-                  <p className="text-sm truncate flex-1">{origin?.name || 'Origen'}</p>
-                  <button onClick={() => { setOrigin(null); setPanelView('search') }} className="text-gray-400">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="w-3 h-3 rounded-full bg-primary" />
-                  <p className="text-sm truncate flex-1 text-gray-400">
-                    {destination?.name || 'Ingrese el destino'}
-                  </p>
-                  <button onClick={() => { setDestination(null); setPanelView('search') }} className="text-gray-400">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <button
-                onClick={() => setPanelView('home')}
-                className="w-full bg-[#1a1f36] text-white py-2 text-sm font-medium"
-              >
-                Toca para cambiar la dirección
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Security Banner */}
-      {panelView === 'home' && (
-        <div className="absolute bottom-48 left-4 right-4 z-10">
-          <div className="bg-white rounded-xl p-3 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
-              ✓
-            </div>
-            <p className="text-sm text-gray-700">¡Bienvenido! Tu seguridad es nuestra prioridad</p>
+          <div className="bg-white rounded-xl px-4 py-2 shadow-lg flex-1">
+            <p className="text-xs text-gray-400">Ubicación actual</p>
+            <p className="text-sm text-gray-700 truncate">{locationName || 'Buscando...'}</p>
           </div>
         </div>
-      )}
-
-      {/* Compass Button */}
-      <div className="absolute right-4 bottom-40 z-10">
-        <button className="bg-white rounded-full p-3 shadow-lg">
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9l5-5 5 5" />
-          </svg>
-        </button>
       </div>
 
-      {/* Bottom Panel */}
+      {/* Bottom Panel - Always visible with options */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
         {panelView === 'home' && (
           <div className="bg-white rounded-t-3xl shadow-2xl">
-            <div className="p-4">
+            <div className="p-4 space-y-4">
+              {/* Where to? Search Bar */}
               <button
                 onClick={() => setPanelView('search')}
-                className="w-full bg-gray-100 rounded-xl px-4 py-4 flex items-center gap-3 text-left"
+                className="w-full bg-gray-100 rounded-2xl px-4 py-4 flex items-center gap-3 text-left hover:bg-gray-200 transition-colors"
               >
-                <div className="w-3 h-3 rounded-full bg-black" />
-                <span className="text-gray-500">Toca aquí para comenzar</span>
-              </button>
-            </div>
-
-            {/* Referral Banner */}
-            <div className="px-4 pb-4">
-              <div className="bg-primary rounded-xl p-4 flex items-center gap-4">
-                <div className="text-4xl">🎉</div>
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
                 <div>
-                  <p className="font-bold text-white">¡Comparte y gana!</p>
-                  <p className="text-sm text-white/80">Refiere a tus amigos y gana sin límites</p>
+                  <p className="font-semibold text-gray-800">¿A dónde vas?</p>
+                  <p className="text-sm text-gray-500">Selecciona tu destino</p>
+                </div>
+              </button>
+
+              {/* Quick Access Buttons */}
+              <div className="flex gap-3">
+                <button className="flex-1 bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="text-xl">🏠</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-800">Casa</p>
+                    <p className="text-xs text-gray-400">Guardar ubicación</p>
+                  </div>
+                </button>
+                <button className="flex-1 bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                    <span className="text-xl">💼</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-800">Trabajo</p>
+                    <p className="text-xs text-gray-400">Guardar ubicación</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Recent Locations */}
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">Recientes</p>
+                <div className="space-y-2">
+                  {[
+                    { name: 'Plaza Bolívar', address: 'Centro, Quíbor', icon: '🏛️' },
+                    { name: 'Barquisimeto', address: 'Av. Lara, Barquisimeto', icon: '🏙️' },
+                  ].map((loc, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setDestination({ name: `${loc.name}, ${loc.address}`, lat: 0, lng: 0 })
+                        setPanelView('search')
+                      }}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl text-left transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <span className="text-lg">{loc.icon}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{loc.name}</p>
+                        <p className="text-xs text-gray-400">{loc.address}</p>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* Promo Banner */}
+              <div className="bg-gradient-to-r from-primary to-orange-500 rounded-2xl p-4 flex items-center gap-4">
+                <div className="text-4xl">🎉</div>
+                <div className="flex-1">
+                  <p className="font-bold text-white">¡Primer viaje gratis!</p>
+                  <p className="text-sm text-white/80">Usa el código BIENVENIDO</p>
+                </div>
+                <button className="bg-white text-primary px-4 py-2 rounded-xl font-bold text-sm">
+                  Usar
+                </button>
+              </div>
             </div>
+
+            {/* Nearby Drivers Counter */}
+            {nearbyDrivers.length > 0 && (
+              <div className="px-4 pb-4">
+                <div className="bg-[#1a1f36] rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-white text-sm">{nearbyDrivers.length} conductores cerca</span>
+                  </div>
+                  <button
+                    onClick={() => setPanelView('search')}
+                    className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium"
+                  >
+                    Solicitar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -412,17 +428,6 @@ export default function PassengerDashboard() {
                 />
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-2">
-                <button className="flex-1 border border-gray-300 rounded-xl py-2 px-4 flex items-center justify-center gap-2 text-sm">
-                  <span>⭐</span> Agrega lugar favorito
-                </button>
-                <select className="bg-[#1a1f36] text-white rounded-xl py-2 px-4 text-sm">
-                  <option>Solo ida</option>
-                  <option>Ida y vuelta</option>
-                </select>
-              </div>
-
               {/* Map Selection Button */}
               <button
                 onClick={() => setSelectingField('destination')}
@@ -433,19 +438,24 @@ export default function PassengerDashboard() {
 
               {/* Recent Locations */}
               <div className="space-y-2 pt-2">
-                {recentLocations.map((loc, index) => (
+                {[
+                  { name: 'Plaza Bolívar', address: 'Centro, Quíbor', icon: '🏛️' },
+                  { name: 'Barquisimeto', address: 'Av. Lara, Barquisimeto', icon: '🏙️' },
+                ].map((loc, index) => (
                   <button
                     key={index}
                     onClick={() => {
-                      setDestination(loc)
+                      setDestination({ name: `${loc.name}, ${loc.address}`, lat: 0, lng: 0 })
                       setPanelView('vehicles')
                     }}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg text-left"
+                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl text-left"
                   >
-                    <span className="text-gray-400">🕐</span>
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <span className="text-lg">{loc.icon}</span>
+                    </div>
                     <div>
-                      <p className="text-sm font-medium">{loc.name.split(',')[0]}</p>
-                      <p className="text-xs text-gray-500 truncate">{loc.name}</p>
+                      <p className="text-sm font-medium">{loc.name}</p>
+                      <p className="text-xs text-gray-500">{loc.address}</p>
                     </div>
                   </button>
                 ))}
@@ -501,6 +511,7 @@ export default function PassengerDashboard() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">-5%</span>
+                      <span className="text-xs text-gray-400">{vehicle.eta}</span>
                     </div>
                     <p className="font-bold">{vehicle.name}</p>
                     <p className="text-xs text-gray-500">👤 {vehicle.capacity}</p>
