@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/auth-provider'
 import dynamic from 'next/dynamic'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
@@ -29,11 +28,10 @@ interface SelectedPlace {
   lng: number
 }
 
-type PanelView = 'home' | 'search' | 'vehicles' | 'ride'
+type PanelView = 'home' | 'search' | 'vehicles' | 'vehicleDetail' | 'ride'
 
 export default function PassengerDashboard() {
   const { user, logout } = useAuth()
-  const router = useRouter()
   const [panelView, setPanelView] = useState<PanelView>('home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [nearbyDrivers, setNearbyDrivers] = useState<Driver[]>([])
@@ -48,6 +46,8 @@ export default function PassengerDashboard() {
   const [rideEstimate, setRideEstimate] = useState<any>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [customPrice, setCustomPrice] = useState<number>(0)
+  const [tripType, setTripType] = useState<'Solo ida' | 'Ida y vuelta' | 'Multi paradas'>('Solo ida')
+  const [tripTypeOpen, setTripTypeOpen] = useState(false)
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -163,9 +163,9 @@ export default function PassengerDashboard() {
   }
 
   const vehicleTypes = [
-    { id: 'moto', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min' },
-    { id: 'car', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min' },
-    { id: 'comfort', name: 'Confort', capacity: 4, icon: '🚙', priceMultiplier: 2.1, eta: '7 min' },
+    { id: 'moto', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min', image: '🛵' },
+    { id: 'car', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min', image: '🚙' },
+    { id: 'comfort', name: 'Confort', capacity: 4, icon: '🚙', priceMultiplier: 2.1, eta: '7 min', image: '🚘' },
   ]
 
   const mapMarkers = [
@@ -173,7 +173,7 @@ export default function PassengerDashboard() {
       id: 'origin',
       position: [origin.lat, origin.lng] as [number, number],
       type: 'pickup' as const,
-      label: `Origen: ${origin.name}`,
+      label: `Partida: ${origin.name}`,
     }] : []),
     ...(destination ? [{
       id: 'destination',
@@ -208,7 +208,7 @@ export default function PassengerDashboard() {
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
-                <h1 className="text-2xl font-bold text-white">RAPIDITO</h1>
+                <h1 className="text-3xl font-bold text-white">RAPIDITO</h1>
                 <button onClick={() => setSidebarOpen(false)} className="text-white">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -216,35 +216,31 @@ export default function PassengerDashboard() {
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
-                  {user.firstName[0]}{user.lastName[0]}
-                </div>
-                <div>
-                  <p className="font-semibold text-lg">{user.firstName} {user.lastName}</p>
-                  <button className="text-xs bg-primary px-3 py-1 rounded-full text-white font-medium">
-                    Editar perfil
-                  </button>
-                </div>
+              <div className="flex items-center justify-between mb-8">
+                <p className="text-lg">{user.firstName} {user.lastName}</p>
+                <button className="bg-[#CDDC39] text-[#1a1f36] px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Editar perfil
+                </button>
               </div>
 
-              <nav className="space-y-1">
+              <nav className="space-y-2">
                 {[
-                  { icon: '🕐', label: 'Historial de viajes' },
-                  { icon: '💰', label: 'Billetera', extra: '($0)' },
-                  { icon: '📍', label: 'Lugares guardados' },
-                  { icon: '⭐', label: 'Favoritos' },
-                  { icon: '🎫', label: 'Códigos promocionales' },
-                  { icon: '👥', label: 'Referidos', extra: '¡Gana $1!' },
-                  { icon: '🎧', label: 'Soporte' },
-                  { icon: '⚙️', label: 'Configuración' },
+                  { icon: '🕐', label: 'Historial' },
+                  { icon: '💰', label: 'Billetera ($0)' },
+                  { icon: '🎧', label: 'Soporte Técnico' },
+                  { icon: '👥', label: 'Referidos' },
+                  { icon: '❤️', label: 'Conductores favoritos' },
+                  { icon: '🎨', label: 'Estilo y tema' },
                 ].map((item) => (
                   <button
                     key={item.label}
                     className="flex items-center gap-4 w-full px-4 py-3 text-left text-gray-300 hover:bg-white/10 rounded-lg transition-colors"
                   >
                     <span className="text-xl">{item.icon}</span>
-                    <span>{item.label} {item.extra || ''}</span>
+                    <span className="text-lg">{item.label}</span>
                   </button>
                 ))}
               </nav>
@@ -263,8 +259,8 @@ export default function PassengerDashboard() {
         </div>
       )}
 
-      {/* Map (partial - top 45%) */}
-      <div className="absolute inset-0 h-[45%]">
+      {/* Map (full screen background) */}
+      <div className="absolute inset-0">
         <MapView
           center={currentLocation ? [currentLocation.lat, currentLocation.lng] : undefined}
           markers={mapMarkers}
@@ -273,137 +269,93 @@ export default function PassengerDashboard() {
         />
       </div>
 
-      {/* Gradient overlay for map */}
-      <div className="absolute top-[40%] left-0 right-0 h-16 bg-gradient-to-b from-transparent to-gray-100 z-[1]" />
-
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="bg-white rounded-full p-3 shadow-lg hover:bg-gray-50"
+            className="bg-white rounded-2xl p-3 shadow-lg hover:bg-gray-50"
           >
             <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          <div className="bg-white rounded-xl px-4 py-2 shadow-lg flex-1">
-            <p className="text-xs text-gray-400">Ubicación actual</p>
-            <p className="text-sm text-gray-700 truncate">{locationName || 'Buscando...'}</p>
+          {/* User Level/Balance */}
+          <div className="bg-white rounded-2xl px-4 py-2 shadow-lg flex items-center gap-2">
+            <div className="w-6 h-6 bg-[#CDDC39] rounded-full flex items-center justify-center">
+              <span className="text-xs">💎</span>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-800">Plata</p>
+              <p className="text-xs text-gray-500">0 km · 10d</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Panel - Always visible with options */}
+      {/* Security Banner */}
+      {panelView === 'home' && (
+        <div className="absolute bottom-52 left-4 right-4 z-10">
+          <div className="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+            <p className="text-sm text-gray-700 font-medium">¡Bienvenido! Tu seguridad es nuestra prioridad</p>
+          </div>
+        </div>
+      )}
+
+      {/* Compass Button */}
+      <div className="absolute right-4 bottom-52 z-10">
+        <button className="bg-white rounded-full p-3 shadow-lg">
+          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9l5-5 5 5" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Bottom Panel */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
+        {/* HOME VIEW */}
         {panelView === 'home' && (
-          <div className="bg-white rounded-t-3xl shadow-2xl">
-            <div className="p-4 space-y-4">
+          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+            <div className="p-5 space-y-4">
               {/* Where to? Search Bar */}
               <button
                 onClick={() => setPanelView('search')}
-                className="w-full bg-gray-100 rounded-2xl px-4 py-4 flex items-center gap-3 text-left hover:bg-gray-200 transition-colors"
+                className="w-full bg-gray-100 rounded-2xl px-5 py-4 flex items-center gap-4 text-left hover:bg-gray-200 transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">¿A dónde vas?</p>
-                  <p className="text-sm text-gray-500">Selecciona tu destino</p>
-                </div>
+                <div className="w-3 h-3 rounded-full bg-black" />
+                <span className="text-gray-500 text-lg">Toca aquí para comenzar</span>
               </button>
 
-              {/* Quick Access Buttons */}
-              <div className="flex gap-3">
-                <button className="flex-1 bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-xl">🏠</span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-800">Casa</p>
-                    <p className="text-xs text-gray-400">Guardar ubicación</p>
-                  </div>
-                </button>
-                <button className="flex-1 bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <span className="text-xl">💼</span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-800">Trabajo</p>
-                    <p className="text-xs text-gray-400">Guardar ubicación</p>
-                  </div>
-                </button>
-              </div>
-
-              {/* Recent Locations */}
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Recientes</p>
-                <div className="space-y-2">
-                  {[
-                    { name: 'Plaza Bolívar', address: 'Centro, Quíbor', icon: '🏛️' },
-                    { name: 'Barquisimeto', address: 'Av. Lara, Barquisimeto', icon: '🏙️' },
-                  ].map((loc, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setDestination({ name: `${loc.name}, ${loc.address}`, lat: 0, lng: 0 })
-                        setPanelView('search')
-                      }}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl text-left transition-colors"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                        <span className="text-lg">{loc.icon}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{loc.name}</p>
-                        <p className="text-xs text-gray-400">{loc.address}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Promo Banner */}
-              <div className="bg-gradient-to-r from-primary to-orange-500 rounded-2xl p-4 flex items-center gap-4">
-                <div className="text-4xl">🎉</div>
-                <div className="flex-1">
-                  <p className="font-bold text-white">¡Primer viaje gratis!</p>
-                  <p className="text-sm text-white/80">Usa el código BIENVENIDO</p>
+              <div className="bg-[#CDDC39] rounded-2xl p-4 flex items-center gap-4">
+                <div className="text-5xl">🎉</div>
+                <div>
+                  <p className="font-bold text-[#1a1f36] text-lg">¡Comparte y gana!</p>
+                  <p className="text-sm text-[#1a1f36]/70">Refiere a tus amigos y gana sin limites</p>
                 </div>
-                <button className="bg-white text-primary px-4 py-2 rounded-xl font-bold text-sm">
-                  Usar
-                </button>
               </div>
             </div>
 
-            {/* Nearby Drivers Counter */}
-            {nearbyDrivers.length > 0 && (
-              <div className="px-4 pb-4">
-                <div className="bg-[#1a1f36] rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    <span className="text-white text-sm">{nearbyDrivers.length} conductores cerca</span>
-                  </div>
-                  <button
-                    onClick={() => setPanelView('search')}
-                    className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium"
-                  >
-                    Solicitar
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Pagination Dots */}
+            <div className="flex justify-center gap-2 pb-6">
+              <div className="w-8 h-2 rounded-full bg-[#1a1f36]" />
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+            </div>
           </div>
         )}
 
+        {/* SEARCH VIEW */}
         {panelView === 'search' && (
-          <div className="bg-white rounded-t-3xl shadow-2xl">
-            <div className="p-4 space-y-3">
+          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+            <div className="p-5 space-y-4">
               {/* Origin */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
                 <div className="w-3 h-3 rounded-full bg-black" />
                 <input
                   type="text"
@@ -411,36 +363,81 @@ export default function PassengerDashboard() {
                   onChange={(e) => setOrigin(prev => prev ? { ...prev, name: e.target.value } : null)}
                   onFocus={() => setSelectingField('origin')}
                   placeholder="Origen"
-                  className="flex-1 text-sm border-b pb-2 outline-none"
+                  className="flex-1 text-base bg-transparent outline-none"
                 />
+                <button className="text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
               {/* Destination */}
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-primary" />
+              <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
+                <div className="w-3 h-3 rounded-full bg-[#CDDC39]" />
                 <input
                   type="text"
                   value={destination?.name || ''}
                   onChange={(e) => setDestination(prev => prev ? { ...prev, name: e.target.value } : null)}
                   onFocus={() => setSelectingField('destination')}
                   placeholder="Ingrese el destino"
-                  className="flex-1 text-sm border-b pb-2 outline-none"
+                  className="flex-1 text-base bg-transparent outline-none"
                 />
+                <button className="text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button className="flex-1 border border-gray-300 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-medium">
+                  <span>⭐</span> Agrega lugar favorito
+                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setTripTypeOpen(!tripTypeOpen)}
+                    className="bg-[#1a1f36] text-white rounded-2xl py-3 px-4 text-sm font-medium flex items-center gap-2"
+                  >
+                    {tripType}
+                    <svg className={`w-4 h-4 transition-transform ${tripTypeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {tripTypeOpen && (
+                    <div className="absolute right-0 top-full mt-2 bg-[#1a1f36] text-white rounded-2xl overflow-hidden shadow-xl z-20 w-48">
+                      {['Solo ida', 'Ida y vuelta', 'Multi paradas'].map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => {
+                            setTripType(type as any)
+                            setTripTypeOpen(false)
+                          }}
+                          className={`w-full px-4 py-3 text-left text-sm hover:bg-white/10 ${tripType === type ? 'bg-white/20' : ''}`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Map Selection Button */}
               <button
                 onClick={() => setSelectingField('destination')}
-                className="w-full bg-primary rounded-xl py-3 text-white font-medium flex items-center justify-center gap-2"
+                className="w-full bg-[#CDDC39] rounded-2xl py-4 text-[#1a1f36] font-bold text-base flex items-center justify-center gap-2"
               >
                 📍 Señalar la ubicación en el mapa
               </button>
 
               {/* Recent Locations */}
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2">
                 {[
-                  { name: 'Plaza Bolívar', address: 'Centro, Quíbor', icon: '🏛️' },
-                  { name: 'Barquisimeto', address: 'Av. Lara, Barquisimeto', icon: '🏙️' },
+                  { name: 'Vereda 5', address: 'Cerritos Blancos, Parroquia Juan de Villegas', icon: '🕐' },
+                  { name: 'Cerritos Blancos', address: 'Barquisimeto, Lara, Venezuela', icon: '🕐' },
+                  { name: 'Asociación Venezolana Centro O', address: 'Barquisimeto, Lara, Venezuela', icon: '🕐' },
                 ].map((loc, index) => (
                   <button
                     key={index}
@@ -448,14 +445,14 @@ export default function PassengerDashboard() {
                       setDestination({ name: `${loc.name}, ${loc.address}`, lat: 0, lng: 0 })
                       setPanelView('vehicles')
                     }}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl text-left"
+                    className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl text-left transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
                       <span className="text-lg">{loc.icon}</span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{loc.name}</p>
-                      <p className="text-xs text-gray-500">{loc.address}</p>
+                      <p className="text-base font-bold text-gray-800">{loc.name}</p>
+                      <p className="text-sm text-gray-500 truncate">{loc.address}</p>
                     </div>
                   </button>
                 ))}
@@ -463,10 +460,10 @@ export default function PassengerDashboard() {
             </div>
 
             {/* Bottom Buttons */}
-            <div className="p-4 flex gap-3 border-t">
+            <div className="p-5 flex gap-4 border-t">
               <button
                 onClick={() => setPanelView('home')}
-                className="flex-1 border border-gray-300 rounded-xl py-3 font-medium"
+                className="flex-1 border-2 border-[#1a1f36] rounded-2xl py-4 font-bold text-[#1a1f36]"
               >
                 Volver
               </button>
@@ -474,7 +471,7 @@ export default function PassengerDashboard() {
                 onClick={() => {
                   if (destination) setPanelView('vehicles')
                 }}
-                className="flex-1 bg-[#1a1f36] text-white rounded-xl py-3 font-medium"
+                className="flex-1 bg-[#1a1f36] text-white rounded-2xl py-4 font-bold"
               >
                 Confirmar viaje
               </button>
@@ -482,17 +479,38 @@ export default function PassengerDashboard() {
           </div>
         )}
 
+        {/* VEHICLES VIEW */}
         {panelView === 'vehicles' && (
-          <div className="bg-white rounded-t-3xl shadow-2xl">
+          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+            {/* Origin/Destination Bar */}
+            <div className="p-4 border-b">
+              <div className="bg-gray-100 rounded-2xl overflow-hidden">
+                <div className="flex items-center gap-3 p-3">
+                  <div className="w-3 h-3 rounded-full bg-black" />
+                  <p className="text-sm truncate flex-1">{origin?.name || 'Origen'}</p>
+                </div>
+                <div className="flex items-center gap-3 p-3 border-t">
+                  <div className="w-3 h-3 rounded-full bg-[#CDDC39]" />
+                  <p className="text-sm truncate flex-1 text-gray-500">{destination?.name || 'Destino'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPanelView('search')}
+                className="w-full bg-[#1a1f36] text-white py-3 rounded-2xl text-sm font-bold mt-3"
+              >
+                Toca para cambiar la dirección
+              </button>
+            </div>
+
             {/* Promo Code */}
             <div className="p-4">
-              <button className="bg-[#1a1f36] text-white rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2">
+              <button className="bg-[#1a1f36] text-white rounded-2xl px-5 py-3 text-sm font-bold flex items-center gap-2">
                 🎫 Agregar código
               </button>
             </div>
 
             {/* Vehicle Options */}
-            <div className="px-4 pb-4 flex gap-3 overflow-x-auto">
+            <div className="px-4 pb-4 flex gap-4 overflow-x-auto">
               {vehicleTypes.map((vehicle) => {
                 const price = (rideEstimate?.estimatedFare || 1.0) * vehicle.priceMultiplier
                 const discountedPrice = price * 0.95
@@ -504,21 +522,19 @@ export default function PassengerDashboard() {
                       setSelectedVehicle(vehicle.id)
                       setRideEstimate({ ...rideEstimate, selectedVehicle: vehicle, estimatedFare: discountedPrice })
                       setCustomPrice(discountedPrice)
+                      setPanelView('vehicleDetail')
                     }}
-                    className={`min-w-[140px] bg-gray-50 rounded-xl p-4 text-left border-2 transition-all ${
-                      selectedVehicle === vehicle.id ? 'border-primary' : 'border-transparent'
-                    }`}
+                    className="min-w-[160px] bg-gray-50 rounded-2xl p-5 text-left border-2 border-transparent hover:border-[#CDDC39] transition-all"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">-5%</span>
-                      <span className="text-xs text-gray-400">{vehicle.eta}</span>
+                      <span className="text-xs bg-[#CDDC39] text-[#1a1f36] px-3 py-1 rounded-full font-bold">-5%</span>
                     </div>
-                    <p className="font-bold">{vehicle.name}</p>
-                    <p className="text-xs text-gray-500">👤 {vehicle.capacity}</p>
-                    <div className="mt-3 text-2xl">{vehicle.icon}</div>
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-400 line-through">${price.toFixed(2)}</p>
-                      <p className="font-bold text-primary">${discountedPrice.toFixed(2)}</p>
+                    <p className="font-bold text-lg">{vehicle.name}</p>
+                    <p className="text-sm text-gray-500">👤 {vehicle.capacity}</p>
+                    <div className="text-5xl my-4">{vehicle.image}</div>
+                    <div>
+                      <p className="text-sm text-gray-400 line-through">${price.toFixed(2)} –5%</p>
+                      <p className="font-bold text-xl">${discountedPrice.toFixed(2)} ↑</p>
                     </div>
                   </button>
                 )
@@ -526,20 +542,18 @@ export default function PassengerDashboard() {
             </div>
 
             {/* Bottom Buttons */}
-            <div className="p-4 flex gap-3 border-t">
+            <div className="p-5 flex gap-4 border-t">
               <button
                 onClick={() => setPanelView('search')}
-                className="flex-1 border border-gray-300 rounded-xl py-3 font-medium"
+                className="flex-1 border-2 border-[#1a1f36] rounded-2xl py-4 font-bold text-[#1a1f36]"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => {
-                  if (selectedVehicle) {
-                    setPanelView('ride')
-                  }
+                  if (selectedVehicle) setPanelView('vehicleDetail')
                 }}
-                className="flex-1 bg-[#1a1f36] text-white rounded-xl py-3 font-medium"
+                className="flex-1 bg-[#1a1f36] text-white rounded-2xl py-4 font-bold"
                 disabled={!selectedVehicle}
               >
                 Confirmar viaje
@@ -548,50 +562,140 @@ export default function PassengerDashboard() {
           </div>
         )}
 
+        {/* VEHICLE DETAIL VIEW */}
+        {panelView === 'vehicleDetail' && selectedVehicle && (
+          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+            <div className="p-5">
+              {/* Header with close button */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
+                  <p className="text-gray-500">Capacidad Máxima</p>
+                  <p className="text-lg">👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
+                  {selectedVehicle === 'moto' && (
+                    <p className="text-sm text-gray-500 mt-2">Es necesario el uso del casco para este servicio</p>
+                  )}
+                </div>
+                <div className="text-7xl">{vehicleTypes.find(v => v.id === selectedVehicle)?.image}</div>
+              </div>
+
+              {/* Service Options */}
+              <div className="space-y-3 mt-6">
+                {/* Servicio Rápido */}
+                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold">Servicio Rápido</p>
+                    <p className="text-sm text-gray-500">Llegada más rápida</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-bold text-lg">${((rideEstimate?.estimatedFare || 1.0) * 1.1 * 0.95).toFixed(2)}</span>
+                      <span className="text-sm text-gray-400 line-through">${((rideEstimate?.estimatedFare || 1.0) * 1.1).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <span>⚡</span> Más rápido
+                    </span>
+                    <span className="bg-[#CDDC39] text-[#1a1f36] px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <button className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold">
+                      Solicitar Rápido
+                    </button>
+                  </div>
+                </div>
+
+                {/* Servicio Normal */}
+                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold">Servicio Normal</p>
+                    <p className="text-sm text-gray-500">Precio establecido</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-bold text-lg">${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
+                      <span className="text-sm text-gray-400 line-through">${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#CDDC39] text-[#1a1f36] px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <button 
+                      onClick={() => {
+                        setCustomPrice((rideEstimate?.estimatedFare || 1.0) * 0.95)
+                        setPanelView('ride')
+                      }}
+                      className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold"
+                    >
+                      Pedir Ahora
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selecciona cuánto quieres pagar */}
+                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold">Selecciona cuánto quieres pagar</p>
+                    <p className="text-sm text-gray-500">Elige tú el precio</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-bold text-lg">${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
+                      <span className="text-sm text-gray-400 line-through">${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#CDDC39] text-[#1a1f36] px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <button 
+                      onClick={() => setPanelView('ride')}
+                      className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold"
+                    >
+                      Ofertar Ahora
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RIDE CONFIRMATION VIEW */}
         {panelView === 'ride' && rideEstimate && (
-          <div className="bg-white rounded-t-3xl shadow-2xl">
+          <div className="bg-white rounded-t-[2rem] shadow-2xl">
             {/* Discount Banner */}
-            <div className="bg-blue-500 text-white p-3 flex items-center justify-between">
-              <span className="font-medium">5% Descuento aplicado</span>
+            <div className="bg-blue-500 text-white p-4 flex items-center justify-between rounded-t-[2rem]">
+              <span className="font-bold">5% Descuento aplicado</span>
               <div className="flex items-center gap-2">
-                <span className="line-through text-white/70">${(rideEstimate.estimatedFare / 0.95).toFixed(2)}</span>
-                <span className="font-bold">${rideEstimate.estimatedFare.toFixed(2)}</span>
+                <span className="line-through text-white/70">${(customPrice / 0.95).toFixed(2)}</span>
+                <span className="font-bold text-xl">${customPrice.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="p-4">
+            <div className="p-5">
               {/* Vehicle Info */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <p className="text-xl font-bold">{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</p>
-                  <p className="text-sm text-gray-500">Capacidad Máxima</p>
-                  <p className="text-sm">👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
+                  <h2 className="text-2xl font-bold">{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
+                  <p className="text-gray-500">Capacidad Máxima</p>
+                  <p className="text-lg">👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
                 </div>
-                <div className="text-5xl">{vehicleTypes.find(v => v.id === selectedVehicle)?.icon}</div>
+                <div className="text-7xl">{vehicleTypes.find(v => v.id === selectedVehicle)?.image}</div>
               </div>
 
               {/* Price Selection */}
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className="bg-gray-50 rounded-2xl p-5">
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <span className="bg-primary text-white px-4 py-2 rounded-xl font-medium">
+                  <span className="bg-white border border-gray-200 px-5 py-2 rounded-2xl font-bold text-lg">
                     Tarifa Recomendada
                   </span>
-                  <span className="text-xl font-bold">${customPrice.toFixed(2)}</span>
+                  <span className="text-2xl font-bold">${customPrice.toFixed(2)}</span>
                 </div>
 
-                <p className="text-center text-sm text-gray-500 mb-3">Seleccione el monto a pagar</p>
+                <p className="text-center text-sm text-gray-500 mb-4">Seleccione el monto a pagar</p>
 
                 <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={() => setCustomPrice(prev => Math.max(prev - 0.19, 0.50))}
-                    className="bg-primary text-white px-4 py-2 rounded-xl font-bold"
+                    className="bg-[#CDDC39] text-[#1a1f36] px-6 py-3 rounded-2xl font-bold text-lg"
                   >
-                    -$0.19
+                    –$0.19
                   </button>
-                  <span className="text-lg font-bold px-4">{customPrice.toFixed(2)} $</span>
+                  <span className="text-xl font-bold px-4">{customPrice.toFixed(2)} $</span>
                   <button
                     onClick={() => setCustomPrice(prev => prev + 0.19)}
-                    className="bg-primary text-white px-4 py-2 rounded-xl font-bold"
+                    className="bg-[#CDDC39] text-[#1a1f36] px-6 py-3 rounded-2xl font-bold text-lg"
                   >
                     +$0.19
                   </button>
@@ -599,7 +703,7 @@ export default function PassengerDashboard() {
               </div>
 
               {/* Start Ride Button */}
-              <button className="w-full bg-[#1a1f36] text-white rounded-xl py-4 font-bold mt-4 text-lg">
+              <button className="w-full bg-[#1a1f36] text-white rounded-2xl py-5 font-bold mt-6 text-xl">
                 Comenzar viaje
               </button>
             </div>
