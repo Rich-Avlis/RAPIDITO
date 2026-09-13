@@ -21,17 +21,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Viaje no encontrado' }, { status: 404 })
     }
 
-    const newMessage = {
-      id: `MSG-${Date.now()}`,
-      senderId: user.id,
-      senderName: `${user.firstName} ${user.lastName}`,
-      senderRole: user.role,
-      message,
-      timestamp: new Date().toISOString(),
-    }
+    // Persist message in DB
+    const newMessage = await prisma.message.create({
+      data: {
+        rideId,
+        senderId: user.id,
+        content: message,
+      },
+      include: {
+        sender: {
+          select: { firstName: true, lastName: true, role: true },
+        },
+      },
+    })
 
-    // Store message in a simple way (could use a separate table in production)
-    return NextResponse.json({ success: true, data: newMessage })
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: newMessage.id,
+        senderId: newMessage.senderId,
+        senderName: `${newMessage.sender.firstName} ${newMessage.sender.lastName}`,
+        senderRole: newMessage.sender.role,
+        message: newMessage.content,
+        timestamp: newMessage.createdAt.toISOString(),
+      },
+    })
   } catch (error) {
     console.error('Send message error:', error)
     return NextResponse.json({ success: false, error: 'Error del servidor' }, { status: 500 })
@@ -52,7 +66,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'rideId requerido' }, { status: 400 })
     }
 
-    return NextResponse.json({ success: true, data: [] })
+    // Fetch messages from DB
+    const messages = await prisma.message.findMany({
+      where: { rideId },
+      include: {
+        sender: {
+          select: { firstName: true, lastName: true, role: true },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+      take: 50,
+    })
+
+    const formattedMessages = messages.map((msg) => ({
+      id: msg.id,
+      senderId: msg.senderId,
+      senderName: `${msg.sender.firstName} ${msg.sender.lastName}`,
+      senderRole: msg.sender.role,
+      message: msg.content,
+      timestamp: msg.createdAt.toISOString(),
+    }))
+
+    return NextResponse.json({ success: true, data: formattedMessages })
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Error del servidor' }, { status: 500 })
   }

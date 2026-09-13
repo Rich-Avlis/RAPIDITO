@@ -5,6 +5,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import Link from 'next/link'
 
 interface Wallet {
   balance: number
@@ -20,6 +21,7 @@ export default function DriverWalletPage() {
   const { user } = useAuth()
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [withdrawNotes, setWithdrawNotes] = useState('')
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'withdrawals'>('overview')
 
@@ -49,14 +51,15 @@ export default function DriverWalletPage() {
       const response = await fetch('/api/wallet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount, notes: withdrawNotes || 'Pago Móvil - Banco 0102' }),
       })
 
       const data = await response.json()
       if (data.success) {
         setWithdrawAmount('')
+        setWithdrawNotes('')
         fetchWallet()
-        alert('Solicitud de retiro enviada')
+        alert('Solicitud de retiro enviada, chamo. Será procesada en 24-48 horas.')
       } else {
         alert(data.error)
       }
@@ -76,6 +79,11 @@ export default function DriverWalletPage() {
       <header className="sticky top-0 z-50 border-b bg-white">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
+            <Link href="/driver" className="p-2 rounded-xl hover:bg-gray-100">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">
               R
             </div>
@@ -124,28 +132,40 @@ export default function DriverWalletPage() {
         {/* Withdraw Section */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Solicitar Retiro</CardTitle>
+            <CardTitle>💸 Solicitar Retiro</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
+            <div className="bg-orange-50 rounded-xl p-4 mb-4">
+              <p className="text-sm font-bold text-orange-800">Datos de pago (PagoMóvil)</p>
+              <p className="text-sm text-orange-700 mt-1">
+                Banco: 0102 | Teléfono: 04125203740 | CI: 29673250 | Nombre: Rapidito C.A.
+              </p>
+            </div>
+            <div className="space-y-3">
               <Input
                 type="number"
-                placeholder="Monto a retirar"
+                placeholder="Monto a retirar (mínimo $5.00)"
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 min="5"
                 step="0.01"
               />
+              <Input
+                placeholder="Datos de pago (teléfono, cédula, banco)"
+                value={withdrawNotes}
+                onChange={(e) => setWithdrawNotes(e.target.value)}
+              />
               <Button
                 onClick={handleWithdraw}
                 isLoading={isWithdrawing}
                 disabled={!withdrawAmount || parseFloat(withdrawAmount) < 5}
+                className="w-full"
               >
-                Retirar
+                Solicitar Retiro
               </Button>
             </div>
             <p className="mt-2 text-sm text-gray-500">
-              Monto mínimo: $5.00 | Saldo disponible: ${wallet.balance.toFixed(2)}
+              Saldo disponible: <strong>${wallet.balance.toFixed(2)}</strong> | Mínimo: $5.00
             </p>
           </CardContent>
         </Card>

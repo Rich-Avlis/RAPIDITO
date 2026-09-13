@@ -188,6 +188,11 @@ export default function DriverDashboard() {
             {/* Quick Actions */}
             <Card>
               <CardContent className="p-4 space-y-2">
+                <Link href="/driver/profile">
+                  <Button variant="outline" className="w-full justify-start">
+                    👤 Mi Perfil y Moto
+                  </Button>
+                </Link>
                 <Link href="/driver/documents">
                   <Button variant="outline" className="w-full justify-start">
                     📄 Mi Documentación
@@ -203,9 +208,9 @@ export default function DriverDashboard() {
                     📊 Historial
                   </Button>
                 </Link>
-                <Link href="/driver/complete-profile">
+                <Link href="/driver/faq">
                   <Button variant="outline" className="w-full justify-start">
-                    ⚙️ Mi Perfil
+                    📚 Tutorial y Ayuda
                   </Button>
                 </Link>
               </CardContent>
