@@ -82,6 +82,21 @@ export default function PassengerDashboard() {
   const [rating, setRating] = useState(5)
   const [ratingComment, setRatingComment] = useState('')
 
+  // Wallet & Scheduled state
+  const [showWalletModal, setShowWalletModal] = useState(false)
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [showScheduledModal, setShowScheduledModal] = useState(false)
+  const [scheduledDate, setScheduledDate] = useState('')
+  const [scheduledTime, setScheduledTime] = useState('')
+  const [scheduledNotes, setScheduledNotes] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('cash')
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [tipAmount, setTipAmount] = useState(0)
+  const [showTipModal, setShowTipModal] = useState(false)
+  const [chatMessages, setChatMessages] = useState<any[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [showChatModal, setShowChatModal] = useState(false)
+
   // Load search history from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('rapidito_search_history')
@@ -120,6 +135,99 @@ export default function PassengerDashboard() {
       return 5
     }
     return 0
+  }
+
+  // Load wallet
+  useEffect(() => {
+    const loadWallet = async () => {
+      try {
+        const res = await fetch('/api/wallet/passenger')
+        const data = await res.json()
+        if (data.success) setWalletBalance(data.data.balance)
+      } catch {}
+    }
+    if (user) loadWallet()
+  }, [user])
+
+  // Send tip
+  const sendTip = async () => {
+    if (!activeRide || tipAmount <= 0) return
+    try {
+      const res = await fetch('/api/rides/tip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rideId: activeRide.id, amount: tipAmount, paymentMethod }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowTipModal(false)
+        setTipAmount(0)
+        alert('¡Propina enviada!')
+      }
+    } catch (error) {
+      alert('Error al enviar propina')
+    }
+  }
+
+  // Schedule ride
+  const scheduleRide = async () => {
+    if (!origin || !destination || !scheduledDate || !scheduledTime) return
+    try {
+      const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString()
+      const res = await fetch('/api/rides/scheduled', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originAddress: origin.name,
+          originLat: origin.lat,
+          originLng: origin.lng,
+          destAddress: destination.name,
+          destLat: destination.lat,
+          destLng: destination.lng,
+          scheduledAt,
+          notes: scheduledNotes,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowScheduledModal(false)
+        setScheduledDate('')
+        setScheduledTime('')
+        alert('¡Viaje programado!')
+      }
+    } catch (error) {
+      alert('Error al programar viaje')
+    }
+  }
+
+  // Send chat message
+  const sendChatMessage = async () => {
+    if (!activeRide || !chatInput.trim()) return
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rideId: activeRide.id, message: chatInput }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setChatMessages(prev => [...prev, data.data])
+        setChatInput('')
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
+  }
+
+  // Load chat messages
+  const loadChatMessages = async (rideId: string) => {
+    try {
+      const res = await fetch(`/api/chat?rideId=${rideId}`)
+      const data = await res.json()
+      if (data.success) setChatMessages(data.data)
+    } catch (error) {
+      console.error('Error loading messages:', error)
+    }
   }
 
   // Save to search history
@@ -456,9 +564,11 @@ export default function PassengerDashboard() {
 
               <nav className="space-y-2">
                 {[
-                  { icon: '🕐', label: 'Historial', action: () => alert('Historial de viajes próximamente') },
-                  { icon: '💰', label: `Billetera ($${referralData?.ridesCompleted ? (referralData.ridesCompleted * 0.5).toFixed(2) : '0'})`, action: () => alert('Billetera próximamente') },
+                  { icon: '🕐', label: 'Historial', action: () => window.location.href = '/passenger/history' },
+                  { icon: '💰', label: 'Billetera', action: () => setShowWalletModal(true) },
+                  { icon: '📅', label: 'Viajes programados', action: () => setShowScheduledModal(true) },
                   { icon: '🎁', label: 'Referidos', action: () => { setShowReferralModal(true); setSidebarOpen(false) } },
+                  { icon: '🎧', label: 'Ayuda y Soporte', action: () => window.location.href = '/passenger/support' },
                   { icon: '🎨', label: 'Estilo y tema', action: () => setThemeMenuOpen(!themeMenuOpen) },
                 ].map((item) => (
                   <div key={item.label}>
@@ -1240,11 +1350,7 @@ export default function PassengerDashboard() {
             
             <div className="flex justify-center gap-2 mb-4">
               {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className="text-4xl"
-                >
+                <button key={star} onClick={() => setRating(star)} className="text-4xl">
                   {star <= rating ? '⭐' : '☆'}
                 </button>
               ))}
@@ -1266,6 +1372,226 @@ export default function PassengerDashboard() {
             >
               Enviar calificación
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Wallet Modal */}
+      {showWalletModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowWalletModal(false)}>
+          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
+            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Mi Billetera</h3>
+            
+            <div className="rounded-2xl p-6 text-center mb-4" style={{ backgroundColor: t.primary }}>
+              <p className="text-white/80 text-sm">Saldo disponible</p>
+              <p className="text-4xl font-bold text-white">${walletBalance.toFixed(2)}</p>
+            </div>
+
+            <div className="space-y-2">
+              <button className="w-full rounded-2xl py-3 font-bold" style={{ backgroundColor: t.accent, color: t.primaryText }}>
+                💳 Recargar billetera
+              </button>
+              <button className="w-full rounded-2xl py-3 font-bold border-2" style={{ borderColor: t.border, color: t.text }}>
+                📊 Ver movimientos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Scheduled Ride Modal */}
+      {showScheduledModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowScheduledModal(false)}>
+          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
+            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Programar viaje</h3>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm mb-1 block" style={{ color: t.textSecondary }}>Fecha</label>
+                <input
+                  type="date"
+                  value={scheduledDate}
+                  onChange={(e) => setScheduledDate(e.target.value)}
+                  className="w-full rounded-2xl px-4 py-3 text-sm"
+                  style={{ backgroundColor: t.bgTertiary, color: t.text }}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <div>
+                <label className="text-sm mb-1 block" style={{ color: t.textSecondary }}>Hora</label>
+                <input
+                  type="time"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                  className="w-full rounded-2xl px-4 py-3 text-sm"
+                  style={{ backgroundColor: t.bgTertiary, color: t.text }}
+                />
+              </div>
+              <div>
+                <label className="text-sm mb-1 block" style={{ color: t.textSecondary }}>Notas (opcional)</label>
+                <input
+                  type="text"
+                  value={scheduledNotes}
+                  onChange={(e) => setScheduledNotes(e.target.value)}
+                  placeholder="Ej: Near the park..."
+                  className="w-full rounded-2xl px-4 py-3 text-sm"
+                  style={{ backgroundColor: t.bgTertiary, color: t.text }}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setShowScheduledModal(false)}
+                className="flex-1 rounded-2xl py-3 font-bold border-2"
+                style={{ borderColor: t.border, color: t.text }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={scheduleRide}
+                disabled={!scheduledDate || !scheduledTime}
+                className="flex-1 rounded-2xl py-3 font-bold disabled:opacity-50"
+                style={{ backgroundColor: t.accent, color: t.primaryText }}
+              >
+                Programar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Method Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowPaymentModal(false)}>
+          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
+            <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Método de pago</h3>
+            
+            <div className="space-y-2">
+              {[
+                { id: 'cash', name: 'Efectivo', icon: '💵', desc: 'Paga al conductor' },
+                { id: 'pago_movil', name: 'Pago Móvil', icon: '📱', desc: 'Transferencia bancaria' },
+                { id: 'zelle', name: 'Zelle', icon: '💸', desc: 'Pago electrónico USD' },
+                { id: 'wallet', name: 'Billetera RAPIDITO', icon: '💰', desc: `Saldo: $${walletBalance.toFixed(2)}` },
+              ].map((method) => (
+                <button
+                  key={method.id}
+                  onClick={() => { setPaymentMethod(method.id); setShowPaymentModal(false) }}
+                  className={`w-full rounded-2xl p-4 flex items-center gap-3 ${paymentMethod === method.id ? 'ring-2' : ''}`}
+                  style={{ backgroundColor: t.bgTertiary }}
+                >
+                  <span className="text-2xl">{method.icon}</span>
+                  <div className="text-left">
+                    <p className="font-bold" style={{ color: t.text }}>{method.name}</p>
+                    <p className="text-xs" style={{ color: t.textSecondary }}>{method.desc}</p>
+                  </div>
+                  {paymentMethod === method.id && (
+                    <svg className="w-6 h-6 ml-auto" fill="currentColor" viewBox="0 0 24 24" style={{ color: t.primary }}>
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tip Modal */}
+      {showTipModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowTipModal(false)}>
+          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
+            <h3 className="text-xl font-bold mb-2 text-center" style={{ color: t.text }}>Propina para el conductor</h3>
+            <p className="text-sm text-center mb-4" style={{ color: t.textSecondary }}>Muestra tu agradecimiento</p>
+            
+            <div className="flex justify-center gap-3 mb-4">
+              {[1, 2, 3, 5].map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => setTipAmount(amount)}
+                  className={`w-16 h-16 rounded-2xl font-bold text-lg ${tipAmount === amount ? 'ring-2' : ''}`}
+                  style={{ backgroundColor: tipAmount === amount ? t.primary : t.bgTertiary, color: tipAmount === amount ? 'white' : t.text }}
+                >
+                  ${amount}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowTipModal(false)}
+                className="flex-1 rounded-2xl py-3 font-bold border-2"
+                style={{ borderColor: t.border, color: t.text }}
+              >
+                Saltar
+              </button>
+              <button
+                onClick={sendTip}
+                disabled={tipAmount <= 0}
+                className="flex-1 rounded-2xl py-3 font-bold disabled:opacity-50"
+                style={{ backgroundColor: t.accent, color: t.primaryText }}
+              >
+                Enviar ${tipAmount}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Modal */}
+      {showChatModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowChatModal(false)}>
+          <div className="w-full max-w-md rounded-t-3xl flex flex-col" style={{ backgroundColor: t.bgSecondary, height: '70vh' }} onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: t.border }}>
+              <h3 className="font-bold" style={{ color: t.text }}>Chat con conductor</h3>
+              <button onClick={() => setShowChatModal(false)}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.textSecondary }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {chatMessages.length === 0 ? (
+                <p className="text-center text-sm" style={{ color: t.textSecondary }}>Envía un mensaje al conductor</p>
+              ) : (
+                chatMessages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.senderRole === 'PASSENGER' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${msg.senderRole === 'PASSENGER' ? '' : ''}`}
+                      style={{ backgroundColor: msg.senderRole === 'PASSENGER' ? t.primary : t.bgTertiary, color: msg.senderRole === 'PASSENGER' ? 'white' : t.text }}>
+                      <p className="text-sm">{msg.message}</p>
+                      <p className="text-xs opacity-60 mt-1">{new Date(msg.timestamp).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-4 border-t flex gap-2" style={{ borderColor: t.border }}>
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
+                placeholder="Escribe un mensaje..."
+                className="flex-1 rounded-2xl px-4 py-2 text-sm"
+                style={{ backgroundColor: t.bgTertiary, color: t.text }}
+              />
+              <button
+                onClick={sendChatMessage}
+                disabled={!chatInput.trim()}
+                className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50"
+                style={{ backgroundColor: t.primary }}
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}

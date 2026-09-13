@@ -5,6 +5,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
 
 interface RideRequest {
@@ -187,18 +188,26 @@ export default function DriverDashboard() {
             {/* Quick Actions */}
             <Card>
               <CardContent className="p-4 space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  📄 Mi Documentación
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  💰 Mi Billetera
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  📊 Historial
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  ⚙️ Configuración
-                </Button>
+                <Link href="/driver/documents">
+                  <Button variant="outline" className="w-full justify-start">
+                    📄 Mi Documentación
+                  </Button>
+                </Link>
+                <Link href="/driver/wallet">
+                  <Button variant="outline" className="w-full justify-start">
+                    💰 Mi Billetera
+                  </Button>
+                </Link>
+                <Link href="/driver/history">
+                  <Button variant="outline" className="w-full justify-start">
+                    📊 Historial
+                  </Button>
+                </Link>
+                <Link href="/driver/complete-profile">
+                  <Button variant="outline" className="w-full justify-start">
+                    ⚙️ Mi Perfil
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
