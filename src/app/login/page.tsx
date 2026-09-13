@@ -17,7 +17,7 @@ export default function LoginPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number | null>(null)
 
-  // Animated map background
+  // Animated map background with Lara icons
   useEffect(() => {
     if (!mapRef.current) return
 
@@ -33,11 +33,15 @@ export default function LoginPage() {
     const speed = 0.3
 
     const drawMap = () => {
-      ctx.fillStyle = '#f0f4f8'
+      // Background
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+      gradient.addColorStop(0, '#FFF7ED')
+      gradient.addColorStop(1, '#FFEDD5')
+      ctx.fillStyle = gradient
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Draw grid lines (streets)
-      ctx.strokeStyle = '#d1d5db'
+      // Draw grid lines (calles)
+      ctx.strokeStyle = '#FED7AA'
       ctx.lineWidth = 1
 
       // Vertical lines
@@ -56,8 +60,8 @@ export default function LoginPage() {
         ctx.stroke()
       }
 
-      // Main streets
-      ctx.strokeStyle = '#fbbf24'
+      // Main streets (naranjas)
+      ctx.strokeStyle = '#FB923C'
       ctx.lineWidth = 3
       for (let x = -200 + (offset % 200); x < canvas.width + 200; x += 200) {
         ctx.beginPath()
@@ -72,8 +76,8 @@ export default function LoginPage() {
         ctx.stroke()
       }
 
-      // Draw some blocks
-      ctx.fillStyle = '#e5e7eb'
+      // Draw blocks
+      ctx.fillStyle = '#FED7AA'
       for (let x = -100 + (offset % 80); x < canvas.width + 100; x += 80) {
         for (let y = -100 + (offset % 80); y < canvas.height + 100; y += 80) {
           if ((Math.floor(x / 80) + Math.floor(y / 80)) % 3 === 0) {
@@ -82,7 +86,7 @@ export default function LoginPage() {
         }
       }
 
-      // Draw moving dots (cars/locations)
+      // Moving dots (motos/carros)
       ctx.fillStyle = '#FF6B00'
       const time = Date.now() / 1000
       for (let i = 0; i < 8; i++) {
@@ -93,7 +97,30 @@ export default function LoginPage() {
         ctx.fill()
       }
 
-      // Draw central pin
+      // Draw Obelisco silhouette (simplified)
+      ctx.fillStyle = '#FB923C'
+      ctx.globalAlpha = 0.15
+      const obX = canvas.width * 0.15
+      const obY = canvas.height * 0.3
+      ctx.beginPath()
+      ctx.moveTo(obX, obY + 80)
+      ctx.lineTo(obX + 10, obY)
+      ctx.lineTo(obX + 20, obY + 80)
+      ctx.closePath()
+      ctx.fill()
+
+      // Draw Tinaja silhouette (simplified)
+      const tjX = canvas.width * 0.85
+      const tjY = canvas.height * 0.7
+      ctx.beginPath()
+      ctx.arc(tjX, tjY, 30, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(tjX + 20, tjY - 10, 25, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.globalAlpha = 1.0
+
+      // Central pin
       const centerX = canvas.width / 2
       const centerY = canvas.height / 2
       ctx.fillStyle = '#FF6B00'
@@ -121,6 +148,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setApiError('')
     setErrors({})
 
@@ -161,7 +189,7 @@ export default function LoginPage() {
               R
             </div>
             <h1 className="text-3xl font-bold text-gray-900">RAPIDITO</h1>
-            <p className="text-gray-500 mt-1">Transporte rápido y seguro</p>
+            <p className="text-[#FF6B00] font-medium mt-1">Pa' donde vas, chamo 🏍️</p>
           </div>
 
           {/* Form */}
@@ -220,12 +248,12 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#FF6B00]/30 hover:bg-[#E55D00] transition-colors disabled:opacity-50"
+              className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#FF6B00]/30 hover:bg-[#E55D00] transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Iniciando...
+                  Entrando...
                 </span>
               ) : (
                 'Iniciar Sesión'
@@ -252,7 +280,7 @@ export default function LoginPage() {
             </div>
 
             <Link href="/login-otp">
-              <button className="w-full border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/5 transition-colors">
+              <button className="w-full border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/5 transition-colors cursor-pointer">
                 📱 Iniciar sesión con código SMS
               </button>
             </Link>
@@ -267,7 +295,8 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
+          <p className="text-xs text-gray-500">© 2026 RAPIDITO. 100% GUARO 🇻🇪</p>
           <a 
             href="https://asistid.net" 
             target="_blank" 
