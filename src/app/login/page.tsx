@@ -1,10 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useAuth } from '@/providers/auth-provider'
 
 export default function LoginPage() {
@@ -17,6 +14,110 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState('')
+  const mapRef = useRef<HTMLDivElement>(null)
+  const animationRef = useRef<number | null>(null)
+
+  // Animated map background
+  useEffect(() => {
+    if (!mapRef.current) return
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    mapRef.current.appendChild(canvas)
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+
+    let offset = 0
+    const speed = 0.3
+
+    const drawMap = () => {
+      ctx.fillStyle = '#f0f4f8'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Draw grid lines (streets)
+      ctx.strokeStyle = '#d1d5db'
+      ctx.lineWidth = 1
+
+      // Vertical lines
+      for (let x = -100 + (offset % 80); x < canvas.width + 100; x += 80) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, canvas.height)
+        ctx.stroke()
+      }
+
+      // Horizontal lines
+      for (let y = -100 + (offset % 80); y < canvas.height + 100; y += 80) {
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(canvas.width, y)
+        ctx.stroke()
+      }
+
+      // Main streets
+      ctx.strokeStyle = '#fbbf24'
+      ctx.lineWidth = 3
+      for (let x = -200 + (offset % 200); x < canvas.width + 200; x += 200) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, canvas.height)
+        ctx.stroke()
+      }
+      for (let y = -200 + (offset % 200); y < canvas.height + 200; y += 200) {
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(canvas.width, y)
+        ctx.stroke()
+      }
+
+      // Draw some blocks
+      ctx.fillStyle = '#e5e7eb'
+      for (let x = -100 + (offset % 80); x < canvas.width + 100; x += 80) {
+        for (let y = -100 + (offset % 80); y < canvas.height + 100; y += 80) {
+          if ((Math.floor(x / 80) + Math.floor(y / 80)) % 3 === 0) {
+            ctx.fillRect(x + 5, y + 5, 30, 30)
+          }
+        }
+      }
+
+      // Draw moving dots (cars/locations)
+      ctx.fillStyle = '#FF6B00'
+      const time = Date.now() / 1000
+      for (let i = 0; i < 8; i++) {
+        const x = (Math.sin(time * 0.5 + i * 2) * 0.5 + 0.5) * canvas.width
+        const y = (Math.cos(time * 0.3 + i * 1.5) * 0.5 + 0.5) * canvas.height
+        ctx.beginPath()
+        ctx.arc(x, y, 6, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // Draw central pin
+      const centerX = canvas.width / 2
+      const centerY = canvas.height / 2
+      ctx.fillStyle = '#FF6B00'
+      ctx.beginPath()
+      ctx.arc(centerX, centerY - 10, 12, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#ffffff'
+      ctx.beginPath()
+      ctx.arc(centerX, centerY - 10, 5, 0, Math.PI * 2)
+      ctx.fill()
+
+      offset += speed
+      animationRef.current = requestAnimationFrame(drawMap)
+    }
+
+    drawMap()
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
+      canvas.remove()
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,27 +145,31 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-white to-primary/10 px-4 py-12">
-      {/* Decorative elements */}
-      <div className="fixed top-20 left-10 text-6xl opacity-5">🏍️</div>
-      <div className="fixed bottom-20 right-10 text-5xl opacity-5">🚗</div>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Animated Map Background */}
+      <div ref={mapRef} className="absolute inset-0 z-0" />
 
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white font-bold text-2xl shadow-lg shadow-primary/30">
-            R
+      {/* Overlay */}
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-white/80 via-white/60 to-white/80" />
+
+      {/* Login Card */}
+      <div className="relative z-20 w-full max-w-md mx-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FF6B00] text-white font-bold text-3xl shadow-lg shadow-[#FF6B00]/30">
+              R
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">RAPIDITO</h1>
+            <p className="text-gray-500 mt-1">Transporte rápido y seguro</p>
           </div>
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-          <CardDescription>
-            Ingresa tus credenciales para acceder
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">Teléfono</label>
               <div className="flex">
-                <span className="flex items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600 font-medium">
+                <span className="flex items-center rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 font-medium">
                   +58
                 </span>
                 <input
@@ -72,7 +177,7 @@ export default function LoginPage() {
                   placeholder="412 1234567"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
-                  className="flex-1 rounded-r-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="flex-1 rounded-r-xl border border-gray-200 px-4 py-3 text-sm focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
                 />
               </div>
               {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
@@ -86,7 +191,7 @@ export default function LoginPage() {
                   placeholder="Tu contraseña"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 pr-12 text-sm focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
                 />
                 <button
                   type="button"
@@ -109,62 +214,69 @@ export default function LoginPage() {
             </div>
 
             {apiError && (
-              <p className="text-sm text-red-500 text-center">{apiError}</p>
+              <p className="text-sm text-red-500 text-center bg-red-50 p-3 rounded-xl">{apiError}</p>
             )}
 
-            <Button
+            <button
               type="submit"
-              className="w-full shadow-lg shadow-primary/30"
-              size="lg"
-              isLoading={isLoading}
+              disabled={isLoading}
+              className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#FF6B00]/30 hover:bg-[#E55D00] transition-colors disabled:opacity-50"
             >
-              Iniciar Sesión
-            </Button>
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Iniciando...
+                </span>
+              ) : (
+                'Iniciar Sesión'
+              )}
+            </button>
           </form>
 
+          {/* Links */}
           <div className="mt-6 space-y-4">
             <Link
               href="/forgot-password"
-              className="block text-center text-sm text-primary hover:underline"
+              className="block text-center text-sm text-[#FF6B00] hover:underline"
             >
               ¿Olvidaste tu contraseña?
             </Link>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" />
+                <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">o</span>
+                <span className="bg-white px-3 text-gray-400">o</span>
               </div>
             </div>
 
             <Link href="/login-otp">
-              <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/5">
+              <button className="w-full border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/5 transition-colors">
                 📱 Iniciar sesión con código SMS
-              </Button>
+              </button>
             </Link>
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-500">
             ¿No tienes cuenta?{' '}
-            <Link href="/register" className="text-primary font-medium hover:underline">
+            <Link href="/register" className="text-[#FF6B00] font-bold hover:underline">
               Regístrate
             </Link>
           </p>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Footer */}
-      <div className="fixed bottom-4 left-0 right-0 text-center">
-        <a 
-          href="https://asistid.net" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-xs text-gray-400 hover:text-primary transition-colors"
-        >
-          Powered by <span className="font-semibold">Asistid</span>
-        </a>
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <a 
+            href="https://asistid.net" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-xs text-gray-400 hover:text-[#FF6B00] transition-colors"
+          >
+            Powered by <span className="font-semibold">Asistid</span>
+          </a>
+        </div>
       </div>
     </div>
   )

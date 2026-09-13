@@ -274,7 +274,7 @@ export default function PassengerDashboard() {
     <div className="h-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       {/* Sidebar Overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50" onClick={() => setSidebarOpen(false)}>
+        <div className="fixed inset-0 z-[1100]" onClick={() => setSidebarOpen(false)}>
           <div className="absolute inset-0 bg-black/50" />
           <div
             className="absolute left-0 top-0 h-full w-80 shadow-xl"
@@ -366,7 +366,7 @@ export default function PassengerDashboard() {
       )}
 
       {/* Top Bar */}
-      <div className="relative z-20 shadow-sm" style={{ backgroundColor: t.bgSecondary }}>
+      <div className="relative z-[1000] shadow-sm" style={{ backgroundColor: t.bgSecondary }}>
         <div className="flex items-center gap-3 p-4">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -424,7 +424,7 @@ export default function PassengerDashboard() {
       </div>
 
       {/* Bottom Panel */}
-      <div className="relative z-20 rounded-t-[2rem] shadow-[0_-4px_20px_rgba(0,0,0,0.1)]" style={{ backgroundColor: t.bgSecondary }}>
+      <div className="relative z-[1000] rounded-t-[2rem] shadow-[0_-4px_20px_rgba(0,0,0,0.1)]" style={{ backgroundColor: t.bgSecondary }}>
         {/* HOME VIEW */}
         {panelView === 'home' && (
           <div>
@@ -464,6 +464,25 @@ export default function PassengerDashboard() {
         {/* SEARCH VIEW */}
         {panelView === 'search' && (
           <div>
+            {/* Header with back button */}
+            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+              <button
+                onClick={() => {
+                  setPanelView('home')
+                  setSearchQuery('')
+                  setSearchSuggestions([])
+                  setSelectingField(null)
+                }}
+                className="p-2 rounded-xl hover:opacity-80"
+                style={{ backgroundColor: t.bgTertiary }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.text }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <p className="font-bold" style={{ color: t.text }}>¿A dónde vas?</p>
+            </div>
+
             <div className="p-5 space-y-4">
               {/* Origin */}
               <div className="flex items-center gap-3 rounded-2xl p-4" style={{ backgroundColor: t.bgTertiary }}>
@@ -647,6 +666,20 @@ export default function PassengerDashboard() {
         {/* VEHICLES VIEW */}
         {panelView === 'vehicles' && (
           <div>
+            {/* Header with back button */}
+            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+              <button
+                onClick={() => setPanelView('search')}
+                className="p-2 rounded-xl hover:opacity-80"
+                style={{ backgroundColor: t.bgTertiary }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.text }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <p className="font-bold" style={{ color: t.text }}>Selecciona tu vehículo</p>
+            </div>
+
             {/* Origin/Destination Bar */}
             <div className="p-4 border-b" style={{ borderColor: t.border }}>
               <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: t.bgTertiary }}>
@@ -734,6 +767,19 @@ export default function PassengerDashboard() {
         {/* VEHICLE DETAIL VIEW */}
         {panelView === 'vehicleDetail' && selectedVehicle && (
           <div>
+            {/* Header with back button */}
+            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+              <button
+                onClick={() => setPanelView('vehicles')}
+                className="p-2 rounded-xl hover:opacity-80"
+                style={{ backgroundColor: t.bgTertiary }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.text }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <p className="font-bold" style={{ color: t.text }}>Opciones de servicio</p>
+            </div>
             <div className="p-5">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
@@ -825,6 +871,20 @@ export default function PassengerDashboard() {
         {/* RIDE CONFIRMATION VIEW */}
         {panelView === 'ride' && rideEstimate && (
           <div>
+            {/* Header with back button */}
+            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+              <button
+                onClick={() => setPanelView('vehicleDetail')}
+                className="p-2 rounded-xl hover:opacity-80"
+                style={{ backgroundColor: t.bgTertiary }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.text }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <p className="font-bold" style={{ color: t.text }}>Confirma tu viaje</p>
+            </div>
+
             {/* Discount Banner */}
             <div className="text-white p-4 flex items-center justify-between" style={{ backgroundColor: t.primary }}>
               <span className="font-bold">5% Descuento aplicado</span>

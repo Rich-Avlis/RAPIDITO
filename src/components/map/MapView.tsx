@@ -112,7 +112,7 @@ export function MapView({
       center={center}
       zoom={zoom}
       className={`rounded-xl ${className}`}
-      style={{ height: '100%', width: '100%' }}
+      style={{ height: '100%', width: '100%', zIndex: 1 }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
