@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/providers/auth-provider'
+import { useTheme, themes } from '@/providers/theme-provider'
 import dynamic from 'next/dynamic'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
 
@@ -38,8 +39,11 @@ type PanelView = 'home' | 'search' | 'vehicles' | 'vehicleDetail' | 'ride'
 
 export default function PassengerDashboard() {
   const { user, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
+  const t = themes[theme]
   const [panelView, setPanelView] = useState<PanelView>('home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [nearbyDrivers, setNearbyDrivers] = useState<Driver[]>([])
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number }>({ lat: 9.3167, lng: -70.6045 })
   const [locationName, setLocationName] = useState('Quíbor, Lara')
@@ -263,23 +267,24 @@ export default function PassengerDashboard() {
   ]
 
   if (!user) {
-    return <div className="flex min-h-screen items-center justify-center bg-gray-100">Cargando...</div>
+    return <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: t.bg }}>Cargando...</div>
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       {/* Sidebar Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50" onClick={() => setSidebarOpen(false)}>
           <div className="absolute inset-0 bg-black/50" />
           <div
-            className="absolute left-0 top-0 h-full w-80 bg-[#1a1f36] text-white shadow-xl"
+            className="absolute left-0 top-0 h-full w-80 shadow-xl"
+            style={{ backgroundColor: t.accent, color: t.text }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold text-white">RAPIDITO</h1>
-                <button onClick={() => setSidebarOpen(false)} className="text-white">
+                <h1 className="text-3xl font-bold" style={{ color: t.primaryText }}>RAPIDITO</h1>
+                <button onClick={() => setSidebarOpen(false)} style={{ color: t.primaryText }}>
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
@@ -287,8 +292,8 @@ export default function PassengerDashboard() {
               </div>
 
               <div className="flex items-center justify-between mb-8">
-                <p className="text-lg">{user.firstName} {user.lastName}</p>
-                <button className="bg-[#FF6B00] text-white px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2">
+                <p className="text-lg" style={{ color: t.primaryText }}>{user.firstName} {user.lastName}</p>
+                <button className="px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2" style={{ backgroundColor: t.primary, color: t.primaryText }}>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
@@ -303,15 +308,46 @@ export default function PassengerDashboard() {
                   { icon: '🎧', label: 'Soporte Técnico' },
                   { icon: '👥', label: 'Referidos' },
                   { icon: '❤️', label: 'Conductores favoritos' },
-                  { icon: '🎨', label: 'Estilo y tema' },
+                  { icon: '🎨', label: 'Estilo y tema', action: () => setThemeMenuOpen(!themeMenuOpen) },
                 ].map((item) => (
-                  <button
-                    key={item.label}
-                    className="flex items-center gap-4 w-full px-4 py-3 text-left text-gray-300 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    <span className="text-xl">{item.icon}</span>
-                    <span className="text-lg">{item.label}</span>
-                  </button>
+                  <div key={item.label}>
+                    <button
+                      onClick={item.action}
+                      className="flex items-center gap-4 w-full px-4 py-3 text-left rounded-lg transition-colors hover:bg-white/10"
+                      style={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                      <span className="text-xl">{item.icon}</span>
+                      <span className="text-lg">{item.label}</span>
+                      {item.label === 'Estilo y tema' && (
+                        <svg className={`w-4 h-4 ml-auto transition-transform ${themeMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      )}
+                    </button>
+                    {/* Theme Submenu */}
+                    {item.label === 'Estilo y tema' && themeMenuOpen && (
+                      <div className="ml-4 mt-2 space-y-2">
+                        {(Object.keys(themes) as Array<keyof typeof themes>).map((themeKey) => (
+                          <button
+                            key={themeKey}
+                            onClick={() => setTheme(themeKey)}
+                            className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-colors ${
+                              theme === themeKey ? 'bg-white/20' : 'hover:bg-white/10'
+                            }`}
+                            style={{ color: 'rgba(255,255,255,0.9)' }}
+                          >
+                            <span className="text-lg">{themes[themeKey].icon}</span>
+                            <span>{themes[themeKey].name}</span>
+                            {theme === themeKey && (
+                              <svg className="w-5 h-5 ml-auto" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </nav>
 
@@ -330,24 +366,25 @@ export default function PassengerDashboard() {
       )}
 
       {/* Top Bar */}
-      <div className="relative z-20 bg-white shadow-sm">
+      <div className="relative z-20 shadow-sm" style={{ backgroundColor: t.bgSecondary }}>
         <div className="flex items-center gap-3 p-4">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="bg-gray-100 rounded-2xl p-3 hover:bg-gray-200 transition-colors"
+            className="rounded-2xl p-3 hover:opacity-80 transition-opacity"
+            style={{ backgroundColor: t.bgTertiary }}
           >
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.text }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2 flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center">
-              <span className="text-xs text-white">💎</span>
+          <div className="flex-1 rounded-2xl px-4 py-2 flex items-center gap-2" style={{ backgroundColor: t.bgTertiary }}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: t.primary }}>
+              <span className="text-xs" style={{ color: t.primaryText }}>💎</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-800">Plata</p>
-              <p className="text-xs text-gray-500">0 km · 10d</p>
+              <p className="text-sm font-bold" style={{ color: t.text }}>Plata</p>
+              <p className="text-xs" style={{ color: t.textSecondary }}>0 km · 10d</p>
             </div>
           </div>
         </div>
@@ -365,13 +402,13 @@ export default function PassengerDashboard() {
         {/* Security Banner - Overlay on map */}
         {panelView === 'home' && (
           <div className="absolute bottom-4 left-4 right-4 z-10">
-            <div className="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-3">
+            <div className="rounded-2xl p-4 shadow-lg flex items-center gap-3" style={{ backgroundColor: t.bgSecondary }}>
               <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
               </div>
-              <p className="text-sm text-gray-700 font-medium">¡Bienvenido! Tu seguridad es nuestra prioridad</p>
+              <p className="text-sm font-medium" style={{ color: t.text }}>¡Bienvenido! Tu seguridad es nuestra prioridad</p>
             </div>
           </div>
         )}
@@ -387,7 +424,7 @@ export default function PassengerDashboard() {
       </div>
 
       {/* Bottom Panel */}
-      <div className="relative z-20 bg-white rounded-t-[2rem] shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+      <div className="relative z-20 rounded-t-[2rem] shadow-[0_-4px_20px_rgba(0,0,0,0.1)]" style={{ backgroundColor: t.bgSecondary }}>
         {/* HOME VIEW */}
         {panelView === 'home' && (
           <div>
@@ -399,26 +436,27 @@ export default function PassengerDashboard() {
                   setSelectingField('destination')
                   setTimeout(() => searchInputRef.current?.focus(), 100)
                 }}
-                className="w-full bg-gray-100 rounded-2xl px-5 py-4 flex items-center gap-4 text-left hover:bg-gray-200 transition-colors"
+                className="w-full rounded-2xl px-5 py-4 flex items-center gap-4 text-left hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: t.bgTertiary }}
               >
                 <div className="w-3 h-3 rounded-full bg-black" />
-                <span className="text-gray-500 text-lg">¿A dónde vas?</span>
+                <span className="text-lg" style={{ color: t.textSecondary }}>¿A dónde vas?</span>
               </button>
 
               {/* Promo Banner */}
-              <div className="bg-[#FF6B00] rounded-2xl p-4 flex items-center gap-4">
+              <div className="rounded-2xl p-4 flex items-center gap-4" style={{ backgroundColor: t.primary }}>
                 <div className="text-5xl">🎉</div>
                 <div>
-                  <p className="font-bold text-white text-lg">¡Comparte y gana!</p>
-                  <p className="text-sm text-white/80">Refiere a tus amigos y gana sin limites</p>
+                  <p className="font-bold text-lg" style={{ color: t.primaryText }}>¡Comparte y gana!</p>
+                  <p className="text-sm" style={{ color: `${t.primaryText}cc` }}>Refiere a tus amigos y gana sin limites</p>
                 </div>
               </div>
             </div>
 
             {/* Pagination Dots */}
             <div className="flex justify-center gap-2 pb-6">
-              <div className="w-8 h-2 rounded-full bg-[#FF6B00]" />
-              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <div className="w-8 h-2 rounded-full" style={{ backgroundColor: t.primary }} />
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.border }} />
             </div>
           </div>
         )}
@@ -428,15 +466,15 @@ export default function PassengerDashboard() {
           <div>
             <div className="p-5 space-y-4">
               {/* Origin */}
-              <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
+              <div className="flex items-center gap-3 rounded-2xl p-4" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="w-3 h-3 rounded-full bg-black" />
                 <div className="flex-1">
-                  <p className="text-xs text-gray-400 mb-1">Origen</p>
-                  <p className="text-sm font-medium text-gray-800">{origin?.name || 'Seleccionar origen'}</p>
+                  <p className="text-xs mb-1" style={{ color: t.textSecondary }}>Origen</p>
+                  <p className="text-sm font-medium" style={{ color: t.text }}>{origin?.name || 'Seleccionar origen'}</p>
                 </div>
                 <button 
                   onClick={() => setSelectingField('origin')}
-                  className="text-gray-400 hover:text-gray-600"
+                  style={{ color: t.textSecondary }}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -445,9 +483,9 @@ export default function PassengerDashboard() {
               </div>
 
               {/* Destination Input */}
-              <div className="bg-gray-50 rounded-2xl p-4">
+              <div className="rounded-2xl p-4" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-[#FF6B00]" />
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.primary }} />
                   <input
                     ref={searchInputRef}
                     type="text"
@@ -456,6 +494,7 @@ export default function PassengerDashboard() {
                     onFocus={() => setSelectingField('destination')}
                     placeholder="¿A dónde vas?"
                     className="flex-1 text-base bg-transparent outline-none"
+                    style={{ color: t.text }}
                   />
                   {searchQuery && (
                     <button 
@@ -463,7 +502,7 @@ export default function PassengerDashboard() {
                         setSearchQuery('')
                         setSearchSuggestions([])
                       }}
-                      className="text-gray-400"
+                      style={{ color: t.textSecondary }}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -474,8 +513,8 @@ export default function PassengerDashboard() {
 
                 {/* Loading indicator */}
                 {isSearchingPlaces && (
-                  <div className="mt-3 flex items-center gap-2 text-gray-500">
-                    <div className="w-4 h-4 border-2 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
+                  <div className="mt-3 flex items-center gap-2" style={{ color: t.textSecondary }}>
+                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: t.primary, borderTopColor: 'transparent' }} />
                     <span className="text-sm">Buscando lugares...</span>
                   </div>
                 )}
@@ -487,16 +526,17 @@ export default function PassengerDashboard() {
                       <button
                         key={index}
                         onClick={() => handleSelectSuggestion(suggestion)}
-                        className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl text-left transition-colors"
+                        className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors hover:opacity-80"
+                        style={{ backgroundColor: t.bgSecondary }}
                       >
-                        <div className="w-8 h-8 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-[#FF6B00]" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${t.primary}20` }}>
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" style={{ color: t.primary }}>
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                           </svg>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{suggestion.name.split(',')[0]}</p>
-                          <p className="text-xs text-gray-500 truncate">{suggestion.name}</p>
+                          <p className="text-sm font-medium truncate" style={{ color: t.text }}>{suggestion.name.split(',')[0]}</p>
+                          <p className="text-xs truncate" style={{ color: t.textSecondary }}>{suggestion.name}</p>
                         </div>
                       </button>
                     ))}
@@ -506,7 +546,8 @@ export default function PassengerDashboard() {
                 {/* Map Selection Button */}
                 <button
                   onClick={() => setSelectingField('destination')}
-                  className="w-full mt-3 bg-[#FF6B00] rounded-2xl py-3 text-white font-bold text-sm flex items-center justify-center gap-2"
+                  className="w-full mt-3 rounded-2xl py-3 font-bold text-sm flex items-center justify-center gap-2"
+                  style={{ backgroundColor: t.primary, color: t.primaryText }}
                 >
                   📍 Señalar la ubicación en el mapa
                 </button>
@@ -514,13 +555,17 @@ export default function PassengerDashboard() {
 
               {/* Action Buttons */}
               <div className="flex gap-3">
-                <button className="flex-1 border border-gray-300 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-medium">
+                <button 
+                  className="flex-1 border rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-medium"
+                  style={{ borderColor: t.border, color: t.text }}
+                >
                   <span>⭐</span> Lugar favorito
                 </button>
                 <div className="relative">
                   <button 
                     onClick={() => setTripTypeOpen(!tripTypeOpen)}
-                    className="bg-[#1a1f36] text-white rounded-2xl py-3 px-4 text-sm font-medium flex items-center gap-2"
+                    className="rounded-2xl py-3 px-4 text-sm font-medium flex items-center gap-2"
+                    style={{ backgroundColor: t.accent, color: t.primaryText }}
                   >
                     {tripType}
                     <svg className={`w-4 h-4 transition-transform ${tripTypeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,7 +573,7 @@ export default function PassengerDashboard() {
                     </svg>
                   </button>
                   {tripTypeOpen && (
-                    <div className="absolute right-0 top-full mt-2 bg-[#1a1f36] text-white rounded-2xl overflow-hidden shadow-xl z-20 w-48">
+                    <div className="absolute right-0 top-full mt-2 rounded-2xl overflow-hidden shadow-xl z-20 w-48" style={{ backgroundColor: t.accent }}>
                       {['Solo ida', 'Ida y vuelta', 'Multi paradas'].map((type) => (
                         <button
                           key={type}
@@ -536,7 +581,8 @@ export default function PassengerDashboard() {
                             setTripType(type as any)
                             setTripTypeOpen(false)
                           }}
-                          className={`w-full px-4 py-3 text-left text-sm hover:bg-white/10 ${tripType === type ? 'bg-white/20' : ''}`}
+                          className={`w-full px-4 py-3 text-left text-sm ${tripType === type ? 'bg-white/20' : ''}`}
+                          style={{ color: t.primaryText }}
                         >
                           {type}
                         </button>
@@ -549,19 +595,20 @@ export default function PassengerDashboard() {
               {/* Search History */}
               {searchHistory.length > 0 && !searchQuery && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-500">Recientes</p>
+                  <p className="text-sm font-medium" style={{ color: t.textSecondary }}>Recientes</p>
                   {searchHistory.slice(0, 5).map((place, index) => (
                     <button
                       key={index}
                       onClick={() => handleSelectFromHistory(place)}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl text-left transition-colors"
+                      className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-colors hover:opacity-80"
+                      style={{ backgroundColor: t.bgTertiary }}
                     >
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: t.border }}>
                         <span className="text-lg">🕐</span>
                       </div>
                       <div>
-                        <p className="text-base font-bold text-gray-800">{place.name.split(',')[0]}</p>
-                        <p className="text-sm text-gray-500 truncate">{place.name}</p>
+                        <p className="text-base font-bold" style={{ color: t.text }}>{place.name.split(',')[0]}</p>
+                        <p className="text-sm truncate" style={{ color: t.textSecondary }}>{place.name}</p>
                       </div>
                     </button>
                   ))}
@@ -570,7 +617,7 @@ export default function PassengerDashboard() {
             </div>
 
             {/* Bottom Buttons */}
-            <div className="p-5 flex gap-4 border-t">
+            <div className="p-5 flex gap-4 border-t" style={{ borderColor: t.border }}>
               <button
                 onClick={() => {
                   setPanelView('home')
@@ -578,7 +625,8 @@ export default function PassengerDashboard() {
                   setSearchSuggestions([])
                   setSelectingField(null)
                 }}
-                className="flex-1 border-2 border-[#1a1f36] rounded-2xl py-4 font-bold text-[#1a1f36]"
+                className="flex-1 border-2 rounded-2xl py-4 font-bold"
+                style={{ borderColor: t.accent, color: t.accent }}
               >
                 Volver
               </button>
@@ -586,7 +634,8 @@ export default function PassengerDashboard() {
                 onClick={() => {
                   if (destination) setPanelView('vehicles')
                 }}
-                className="flex-1 bg-[#1a1f36] text-white rounded-2xl py-4 font-bold"
+                className="flex-1 rounded-2xl py-4 font-bold"
+                style={{ backgroundColor: t.accent, color: t.primaryText }}
                 disabled={!destination}
               >
                 Confirmar viaje
@@ -599,20 +648,21 @@ export default function PassengerDashboard() {
         {panelView === 'vehicles' && (
           <div>
             {/* Origin/Destination Bar */}
-            <div className="p-4 border-b">
-              <div className="bg-gray-100 rounded-2xl overflow-hidden">
+            <div className="p-4 border-b" style={{ borderColor: t.border }}>
+              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="flex items-center gap-3 p-3">
                   <div className="w-3 h-3 rounded-full bg-black" />
-                  <p className="text-sm truncate flex-1">{origin?.name || 'Origen'}</p>
+                  <p className="text-sm truncate flex-1" style={{ color: t.text }}>{origin?.name || 'Origen'}</p>
                 </div>
-                <div className="flex items-center gap-3 p-3 border-t">
-                  <div className="w-3 h-3 rounded-full bg-[#FF6B00]" />
-                  <p className="text-sm truncate flex-1 text-gray-500">{destination?.name || 'Destino'}</p>
+                <div className="flex items-center gap-3 p-3 border-t" style={{ borderColor: t.border }}>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.primary }} />
+                  <p className="text-sm truncate flex-1" style={{ color: t.textSecondary }}>{destination?.name || 'Destino'}</p>
                 </div>
               </div>
               <button
                 onClick={() => setPanelView('search')}
-                className="w-full bg-[#1a1f36] text-white py-3 rounded-2xl text-sm font-bold mt-3"
+                className="w-full py-3 rounded-2xl text-sm font-bold mt-3"
+                style={{ backgroundColor: t.accent, color: t.primaryText }}
               >
                 Toca para cambiar la dirección
               </button>
@@ -620,7 +670,7 @@ export default function PassengerDashboard() {
 
             {/* Promo Code */}
             <div className="p-4">
-              <button className="bg-[#1a1f36] text-white rounded-2xl px-5 py-3 text-sm font-bold flex items-center gap-2">
+              <button className="rounded-2xl px-5 py-3 text-sm font-bold flex items-center gap-2" style={{ backgroundColor: t.accent, color: t.primaryText }}>
                 🎫 Agregar código
               </button>
             </div>
@@ -640,17 +690,18 @@ export default function PassengerDashboard() {
                       setCustomPrice(discountedPrice)
                       setPanelView('vehicleDetail')
                     }}
-                    className="min-w-[160px] bg-gray-50 rounded-2xl p-5 text-left border-2 border-transparent hover:border-[#FF6B00] transition-all"
+                    className="min-w-[160px] rounded-2xl p-5 text-left border-2 border-transparent transition-all"
+                    style={{ backgroundColor: t.bgTertiary }}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs bg-[#FF6B00] text-white px-3 py-1 rounded-full font-bold">-5%</span>
+                      <span className="text-xs text-white px-3 py-1 rounded-full font-bold" style={{ backgroundColor: t.primary }}>-5%</span>
                     </div>
-                    <p className="font-bold text-lg">{vehicle.name}</p>
-                    <p className="text-sm text-gray-500">👤 {vehicle.capacity}</p>
+                    <p className="font-bold text-lg" style={{ color: t.text }}>{vehicle.name}</p>
+                    <p className="text-sm" style={{ color: t.textSecondary }}>👤 {vehicle.capacity}</p>
                     <div className="text-5xl my-4">{vehicle.image}</div>
                     <div>
-                      <p className="text-sm text-gray-400 line-through">${price.toFixed(2)} –5%</p>
-                      <p className="font-bold text-xl">${discountedPrice.toFixed(2)} ↑</p>
+                      <p className="text-sm line-through" style={{ color: t.textSecondary }}>${price.toFixed(2)} –5%</p>
+                      <p className="font-bold text-xl" style={{ color: t.text }}>${discountedPrice.toFixed(2)} ↑</p>
                     </div>
                   </button>
                 )
@@ -658,10 +709,11 @@ export default function PassengerDashboard() {
             </div>
 
             {/* Bottom Buttons */}
-            <div className="p-5 flex gap-4 border-t">
+            <div className="p-5 flex gap-4 border-t" style={{ borderColor: t.border }}>
               <button
                 onClick={() => setPanelView('search')}
-                className="flex-1 border-2 border-[#1a1f36] rounded-2xl py-4 font-bold text-[#1a1f36]"
+                className="flex-1 border-2 rounded-2xl py-4 font-bold"
+                style={{ borderColor: t.accent, color: t.accent }}
               >
                 Cancelar
               </button>
@@ -669,7 +721,8 @@ export default function PassengerDashboard() {
                 onClick={() => {
                   if (selectedVehicle) setPanelView('vehicleDetail')
                 }}
-                className="flex-1 bg-[#1a1f36] text-white rounded-2xl py-4 font-bold"
+                className="flex-1 rounded-2xl py-4 font-bold"
+                style={{ backgroundColor: t.accent, color: t.primaryText }}
                 disabled={!selectedVehicle}
               >
                 Confirmar viaje
@@ -685,11 +738,11 @@ export default function PassengerDashboard() {
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold">{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
-                  <p className="text-gray-500">Capacidad Máxima</p>
-                  <p className="text-lg">👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
+                  <h2 className="text-2xl font-bold" style={{ color: t.text }}>{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
+                  <p style={{ color: t.textSecondary }}>Capacidad Máxima</p>
+                  <p className="text-lg" style={{ color: t.text }}>👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
                   {selectedVehicle === 'moto' && (
-                    <p className="text-sm text-gray-500 mt-2">Es necesario el uso del casco para este servicio</p>
+                    <p className="text-sm mt-2" style={{ color: t.textSecondary }}>Es necesario el uso del casco para este servicio</p>
                   )}
                 </div>
                 <div className="text-7xl">{vehicleTypes.find(v => v.id === selectedVehicle)?.image}</div>
@@ -698,44 +751,45 @@ export default function PassengerDashboard() {
               {/* Service Options */}
               <div className="space-y-3 mt-6">
                 {/* Servicio Rápido */}
-                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
+                <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: t.bgTertiary }}>
                   <div>
-                    <p className="font-bold">Servicio Rápido</p>
-                    <p className="text-sm text-gray-500">Llegada más rápida</p>
+                    <p className="font-bold" style={{ color: t.text }}>Servicio Rápido</p>
+                    <p className="text-sm" style={{ color: t.textSecondary }}>Llegada más rápida</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-bold text-lg">${((rideEstimate?.estimatedFare || 1.0) * 1.1 * 0.95).toFixed(2)}</span>
-                      <span className="text-sm text-gray-400 line-through">${((rideEstimate?.estimatedFare || 1.0) * 1.1).toFixed(2)}</span>
+                      <span className="font-bold text-lg" style={{ color: t.text }}>${((rideEstimate?.estimatedFare || 1.0) * 1.1 * 0.95).toFixed(2)}</span>
+                      <span className="text-sm line-through" style={{ color: t.textSecondary }}>${((rideEstimate?.estimatedFare || 1.0) * 1.1).toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                       <span>⚡</span> Más rápido
                     </span>
-                    <span className="bg-[#FF6B00] text-white px-2 py-1 rounded-full text-xs font-bold">5%</span>
-                    <button className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold">
+                    <span className="text-white px-2 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: t.primary }}>5%</span>
+                    <button className="px-4 py-2 rounded-2xl text-sm font-bold" style={{ backgroundColor: t.accent, color: t.primaryText }}>
                       Solicitar Rápido
                     </button>
                   </div>
                 </div>
 
                 {/* Servicio Normal */}
-                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
+                <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: t.bgTertiary }}>
                   <div>
-                    <p className="font-bold">Servicio Normal</p>
-                    <p className="text-sm text-gray-500">Precio establecido</p>
+                    <p className="font-bold" style={{ color: t.text }}>Servicio Normal</p>
+                    <p className="text-sm" style={{ color: t.textSecondary }}>Precio establecido</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-bold text-lg">${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
-                      <span className="text-sm text-gray-400 line-through">${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
+                      <span className="font-bold text-lg" style={{ color: t.text }}>${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
+                      <span className="text-sm line-through" style={{ color: t.textSecondary }}>${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#FF6B00] text-white px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <span className="text-white px-2 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: t.primary }}>5%</span>
                     <button 
                       onClick={() => {
                         setCustomPrice((rideEstimate?.estimatedFare || 1.0) * 0.95)
                         setPanelView('ride')
                       }}
-                      className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold"
+                      className="px-4 py-2 rounded-2xl text-sm font-bold"
+                      style={{ backgroundColor: t.accent, color: t.primaryText }}
                     >
                       Pedir Ahora
                     </button>
@@ -743,20 +797,21 @@ export default function PassengerDashboard() {
                 </div>
 
                 {/* Selecciona cuánto quieres pagar */}
-                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
+                <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: t.bgTertiary }}>
                   <div>
-                    <p className="font-bold">Selecciona cuánto quieres pagar</p>
-                    <p className="text-sm text-gray-500">Elige tú el precio</p>
+                    <p className="font-bold" style={{ color: t.text }}>Selecciona cuánto quieres pagar</p>
+                    <p className="text-sm" style={{ color: t.textSecondary }}>Elige tú el precio</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-bold text-lg">${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
-                      <span className="text-sm text-gray-400 line-through">${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
+                      <span className="font-bold text-lg" style={{ color: t.text }}>${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
+                      <span className="text-sm line-through" style={{ color: t.textSecondary }}>${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#FF6B00] text-white px-2 py-1 rounded-full text-xs font-bold">5%</span>
+                    <span className="text-white px-2 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: t.primary }}>5%</span>
                     <button 
                       onClick={() => setPanelView('ride')}
-                      className="bg-[#1a1f36] text-white px-4 py-2 rounded-2xl text-sm font-bold"
+                      className="px-4 py-2 rounded-2xl text-sm font-bold"
+                      style={{ backgroundColor: t.accent, color: t.primaryText }}
                     >
                       Ofertar Ahora
                     </button>
@@ -771,7 +826,7 @@ export default function PassengerDashboard() {
         {panelView === 'ride' && rideEstimate && (
           <div>
             {/* Discount Banner */}
-            <div className="bg-blue-500 text-white p-4 flex items-center justify-between">
+            <div className="text-white p-4 flex items-center justify-between" style={{ backgroundColor: t.primary }}>
               <span className="font-bold">5% Descuento aplicado</span>
               <div className="flex items-center gap-2">
                 <span className="line-through text-white/70">${(customPrice / 0.95).toFixed(2)}</span>
@@ -783,35 +838,37 @@ export default function PassengerDashboard() {
               {/* Vehicle Info */}
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold">{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
-                  <p className="text-gray-500">Capacidad Máxima</p>
-                  <p className="text-lg">👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
+                  <h2 className="text-2xl font-bold" style={{ color: t.text }}>{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
+                  <p style={{ color: t.textSecondary }}>Capacidad Máxima</p>
+                  <p className="text-lg" style={{ color: t.text }}>👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
                 </div>
                 <div className="text-7xl">{vehicleTypes.find(v => v.id === selectedVehicle)?.image}</div>
               </div>
 
               {/* Price Selection */}
-              <div className="bg-gray-50 rounded-2xl p-5">
+              <div className="rounded-2xl p-5" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <span className="bg-white border border-gray-200 px-5 py-2 rounded-2xl font-bold text-lg">
+                  <span className="border px-5 py-2 rounded-2xl font-bold text-lg" style={{ backgroundColor: t.bgSecondary, borderColor: t.border, color: t.text }}>
                     Tarifa Recomendada
                   </span>
-                  <span className="text-2xl font-bold">${customPrice.toFixed(2)}</span>
+                  <span className="text-2xl font-bold" style={{ color: t.text }}>${customPrice.toFixed(2)}</span>
                 </div>
 
-                <p className="text-center text-sm text-gray-500 mb-4">Seleccione el monto a pagar</p>
+                <p className="text-center text-sm mb-4" style={{ color: t.textSecondary }}>Seleccione el monto a pagar</p>
 
                 <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={() => setCustomPrice(prev => Math.max(prev - 0.19, 0.50))}
-                    className="bg-[#FF6B00] text-white px-6 py-3 rounded-2xl font-bold text-lg"
+                    className="text-white px-6 py-3 rounded-2xl font-bold text-lg"
+                    style={{ backgroundColor: t.primary }}
                   >
                     –$0.19
                   </button>
-                  <span className="text-xl font-bold px-4">{customPrice.toFixed(2)} $</span>
+                  <span className="text-xl font-bold px-4" style={{ color: t.text }}>{customPrice.toFixed(2)} $</span>
                   <button
                     onClick={() => setCustomPrice(prev => prev + 0.19)}
-                    className="bg-[#FF6B00] text-white px-6 py-3 rounded-2xl font-bold text-lg"
+                    className="text-white px-6 py-3 rounded-2xl font-bold text-lg"
+                    style={{ backgroundColor: t.primary }}
                   >
                     +$0.19
                   </button>
@@ -819,7 +876,7 @@ export default function PassengerDashboard() {
               </div>
 
               {/* Start Ride Button */}
-              <button className="w-full bg-[#1a1f36] text-white rounded-2xl py-5 font-bold mt-6 text-xl">
+              <button className="w-full rounded-2xl py-5 font-bold mt-6 text-xl" style={{ backgroundColor: t.accent, color: t.primaryText }}>
                 Comenzar viaje
               </button>
             </div>
