@@ -359,7 +359,7 @@ export default function PassengerDashboard() {
                 <input
                   type="text"
                   value={origin?.name || ''}
-                  onChange={(e) => setOrigin(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  onChange={(e) => setOrigin(prev => ({ ...prev, name: e.target.value }))}
                   onFocus={() => setSelectingField('origin')}
                   placeholder="Origen"
                   className="flex-1 text-base bg-transparent outline-none"
