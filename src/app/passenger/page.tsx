@@ -35,10 +35,10 @@ export default function PassengerDashboard() {
   const [panelView, setPanelView] = useState<PanelView>('home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [nearbyDrivers, setNearbyDrivers] = useState<Driver[]>([])
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [locationName, setLocationName] = useState('')
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number }>({ lat: 9.3167, lng: -70.6045 })
+  const [locationName, setLocationName] = useState('Quíbor, Lara')
 
-  const [origin, setOrigin] = useState<SelectedPlace | null>(null)
+  const [origin, setOrigin] = useState<SelectedPlace>({ name: 'Quíbor, Lara', lat: 9.3167, lng: -70.6045 })
   const [destination, setDestination] = useState<SelectedPlace | null>(null)
   const [selectingField, setSelectingField] = useState<'origin' | 'destination' | null>(null)
 
@@ -197,7 +197,7 @@ export default function PassengerDashboard() {
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-100">
+    <div className="h-screen flex flex-col bg-gray-100">
       {/* Sidebar Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50" onClick={() => setSidebarOpen(false)}>
@@ -259,30 +259,19 @@ export default function PassengerDashboard() {
         </div>
       )}
 
-      {/* Map (full screen background) */}
-      <div className="absolute inset-0">
-        <MapView
-          center={currentLocation ? [currentLocation.lat, currentLocation.lng] : undefined}
-          markers={mapMarkers}
-          className="h-full"
-          onLocationSelect={selectingField ? handleMapClick : undefined}
-        />
-      </div>
-
       {/* Top Bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4">
-        <div className="flex items-center gap-3">
+      <div className="relative z-20 bg-white shadow-sm">
+        <div className="flex items-center gap-3 p-4">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="bg-white rounded-2xl p-3 shadow-lg hover:bg-gray-50"
+            className="bg-gray-100 rounded-2xl p-3 hover:bg-gray-200 transition-colors"
           >
             <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          {/* User Level/Balance */}
-          <div className="bg-white rounded-2xl px-4 py-2 shadow-lg flex items-center gap-2">
+          <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2 flex items-center gap-2">
             <div className="w-6 h-6 bg-[#CDDC39] rounded-full flex items-center justify-center">
               <span className="text-xs">💎</span>
             </div>
@@ -294,34 +283,44 @@ export default function PassengerDashboard() {
         </div>
       </div>
 
-      {/* Security Banner */}
-      {panelView === 'home' && (
-        <div className="absolute bottom-52 left-4 right-4 z-10">
-          <div className="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </div>
-            <p className="text-sm text-gray-700 font-medium">¡Bienvenido! Tu seguridad es nuestra prioridad</p>
-          </div>
-        </div>
-      )}
+      {/* Map Section */}
+      <div className="relative flex-1 min-h-0">
+        <MapView
+          center={[currentLocation.lat, currentLocation.lng]}
+          markers={mapMarkers}
+          className="h-full w-full"
+          onLocationSelect={selectingField ? handleMapClick : undefined}
+        />
 
-      {/* Compass Button */}
-      <div className="absolute right-4 bottom-52 z-10">
-        <button className="bg-white rounded-full p-3 shadow-lg">
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9l5-5 5 5" />
-          </svg>
-        </button>
+        {/* Security Banner - Overlay on map */}
+        {panelView === 'home' && (
+          <div className="absolute bottom-4 left-4 right-4 z-10">
+            <div className="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+              <p className="text-sm text-gray-700 font-medium">¡Bienvenido! Tu seguridad es nuestra prioridad</p>
+            </div>
+          </div>
+        )}
+
+        {/* Compass Button - Overlay on map */}
+        <div className="absolute right-4 bottom-4 z-10">
+          <button className="bg-white rounded-full p-3 shadow-lg">
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9l5-5 5 5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Bottom Panel */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
+      <div className="relative z-20 bg-white rounded-t-[2rem] shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
         {/* HOME VIEW */}
         {panelView === 'home' && (
-          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+          <div>
             <div className="p-5 space-y-4">
               {/* Where to? Search Bar */}
               <button
@@ -352,7 +351,7 @@ export default function PassengerDashboard() {
 
         {/* SEARCH VIEW */}
         {panelView === 'search' && (
-          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+          <div>
             <div className="p-5 space-y-4">
               {/* Origin */}
               <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
@@ -481,7 +480,7 @@ export default function PassengerDashboard() {
 
         {/* VEHICLES VIEW */}
         {panelView === 'vehicles' && (
-          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+          <div>
             {/* Origin/Destination Bar */}
             <div className="p-4 border-b">
               <div className="bg-gray-100 rounded-2xl overflow-hidden">
@@ -564,7 +563,7 @@ export default function PassengerDashboard() {
 
         {/* VEHICLE DETAIL VIEW */}
         {panelView === 'vehicleDetail' && selectedVehicle && (
-          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+          <div>
             <div className="p-5">
               {/* Header with close button */}
               <div className="flex items-center justify-between mb-4">
@@ -653,9 +652,9 @@ export default function PassengerDashboard() {
 
         {/* RIDE CONFIRMATION VIEW */}
         {panelView === 'ride' && rideEstimate && (
-          <div className="bg-white rounded-t-[2rem] shadow-2xl">
+          <div>
             {/* Discount Banner */}
-            <div className="bg-blue-500 text-white p-4 flex items-center justify-between rounded-t-[2rem]">
+            <div className="bg-blue-500 text-white p-4 flex items-center justify-between">
               <span className="font-bold">5% Descuento aplicado</span>
               <div className="flex items-center gap-2">
                 <span className="line-through text-white/70">${(customPrice / 0.95).toFixed(2)}</span>
