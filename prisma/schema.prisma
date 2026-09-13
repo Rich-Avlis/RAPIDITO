@@ -1,13 +1,13 @@
 // RAPIDITO - Prisma Schema
 // Ride-hailing platform for Venezuela
-// Using SQLite for development - switch to PostgreSQL for production
+// Using PostgreSQL for production
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
