@@ -194,8 +194,8 @@ export default function PassengerDashboard() {
     ...nearbyDrivers.map(driver => ({
       id: driver.id,
       position: [
-        currentLocation?.lat + (Math.random() - 0.5) * 0.02,
-        currentLocation?.lng + (Math.random() - 0.5) * 0.02,
+        (currentLocation?.lat ?? 0) + (Math.random() - 0.5) * 0.02,
+        (currentLocation?.lng ?? 0) + (Math.random() - 0.5) * 0.02,
       ] as [number, number],
       type: 'driver' as const,
       label: `${driver.firstName} ${driver.vehicle?.brand || ''} - ${driver.distance.toFixed(1)} km`,
