@@ -59,14 +59,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Check minimum withdrawal amount
-    const minWithdrawal = 5.00
+    const minWithdrawal = 10.00
     if (validatedData.amount < minWithdrawal) {
-      return errorResponse(`Minimum withdrawal amount is $${minWithdrawal}`, 400)
+      return errorResponse(`El mínimo para retirar es $${minWithdrawal}`, 400)
     }
 
     // Check available balance
     if (validatedData.amount > wallet.balance) {
-      return errorResponse('Insufficient balance', 400)
+      return errorResponse('Saldo insuficiente', 400)
+    }
+
+    // Verify driver has registered Pago Móvil data
+    const driverProfile = await prisma.driverProfile.findUnique({
+      where: { userId: user.id },
+    })
+
+    if (!driverProfile?.paymentBank || !driverProfile?.paymentPhone || !driverProfile?.paymentCedula) {
+      return errorResponse('Debes registrar tus datos de Pago Móvil antes de solicitar un retiro. Ve a Mi Perfil → Datos de pago.', 400)
     }
 
     // Create withdrawal request

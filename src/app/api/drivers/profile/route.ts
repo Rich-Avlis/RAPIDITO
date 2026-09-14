@@ -33,6 +33,16 @@ export async function GET(request: NextRequest) {
           year: '',
           type: 'moto',
         },
+        license: {
+          number: profile?.licenseNumber || '',
+          expiry: profile?.licenseExpiry ? profile.licenseExpiry.toISOString().split('T')[0] : '',
+        },
+        payment: {
+          bank: profile?.paymentBank || '',
+          phone: profile?.paymentPhone || '',
+          cedula: profile?.paymentCedula || '',
+          name: profile?.paymentName || '',
+        },
       },
     })
   } catch (error) {
@@ -50,7 +60,7 @@ export async function PUT(request: NextRequest) {
 
     const data = await request.json()
 
-    // Update user info
+    // Update user info (name, email only)
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -60,44 +70,21 @@ export async function PUT(request: NextRequest) {
       },
     })
 
-    // Update or create vehicle
-    if (data.vehicle) {
-      const profile = await prisma.driverProfile.findUnique({
-        where: { userId: user.id },
-        include: { vehicle: true },
-      })
+    // Update license and payment data on DriverProfile
+    await prisma.driverProfile.update({
+      where: { userId: user.id },
+      data: {
+        licenseNumber: data.license?.number || null,
+        licenseExpiry: data.license?.expiry ? new Date(data.license.expiry) : null,
+        paymentBank: data.payment?.bank || null,
+        paymentPhone: data.payment?.phone || null,
+        paymentCedula: data.payment?.cedula || null,
+        paymentName: data.payment?.name || null,
+      },
+    })
 
-      if (profile) {
-        if (profile.vehicle) {
-          await prisma.vehicle.update({
-            where: { driverId: profile.id },
-            data: {
-              brand: data.vehicle.brand,
-              model: data.vehicle.model,
-              color: data.vehicle.color,
-              plateNumber: data.vehicle.plateNumber,
-              year: data.vehicle.year ? parseInt(data.vehicle.year) : null,
-            },
-          })
-        } else {
-          // Get moto type
-          const motoType = await prisma.vehicleType.findFirst({ where: { name: data.vehicle.type || 'moto' } })
-          if (motoType) {
-            await prisma.vehicle.create({
-              data: {
-                driverId: profile.id,
-                vehicleTypeId: motoType.id,
-                brand: data.vehicle.brand,
-                model: data.vehicle.model,
-                color: data.vehicle.color,
-                plateNumber: data.vehicle.plateNumber,
-                year: data.vehicle.year ? parseInt(data.vehicle.year) : null,
-              },
-            })
-          }
-        }
-      }
-    }
+    // Vehicle data is read-only from registration - do NOT update here
+    // Vehicle must match registration data exactly
 
     return NextResponse.json({ success: true, message: 'Perfil actualizado' })
   } catch (error) {

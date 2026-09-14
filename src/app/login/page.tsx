@@ -14,6 +14,8 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState('')
+  const [roleChoice, setRoleChoice] = useState<'PASSENGER' | 'DRIVER' | null>(null)
+  const [pendingUser, setPendingUser] = useState<any>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number | null>(null)
 
@@ -172,6 +174,23 @@ export default function LoginPage() {
     }
   }
 
+  const handleRoleSelect = async (role: 'PASSENGER' | 'DRIVER') => {
+    setRoleChoice(role)
+    try {
+      const res = await fetch('/api/auth/set-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        window.location.href = role === 'DRIVER' ? '/driver' : '/passenger'
+      }
+    } catch {
+      window.location.href = role === 'DRIVER' ? '/driver' : '/passenger'
+    }
+  }
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Map Background */}
@@ -189,7 +208,7 @@ export default function LoginPage() {
               R
             </div>
             <h1 className="text-3xl font-bold text-gray-900">RAPIDITO</h1>
-            <p className="text-[#FF6B00] font-medium mt-1">Pa' donde vas, chamo 🏍️</p>
+            <p className="text-[#FF6B00] font-medium mt-1">Pa' donde vas</p>
           </div>
 
           {/* Form */}
@@ -292,6 +311,33 @@ export default function LoginPage() {
               Regístrate
             </Link>
           </p>
+
+          {/* Role Selection */}
+          {pendingUser && !roleChoice && (
+            <div className="mt-6 p-4 bg-orange-50 rounded-2xl">
+              <p className="text-center text-sm font-bold text-gray-900 mb-3">
+                ¿Cómo quieres usar RAPIDITO?
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleRoleSelect('PASSENGER')}
+                  className="p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-[#FF6B00] transition-colors text-center"
+                >
+                  <div className="text-3xl mb-2">🚗</div>
+                  <div className="font-bold text-gray-900 text-sm">Pasajero</div>
+                  <div className="text-xs text-gray-500 mt-1">Pa' donde vas</div>
+                </button>
+                <button
+                  onClick={() => handleRoleSelect('DRIVER')}
+                  className="p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-[#FF6B00] transition-colors text-center"
+                >
+                  <div className="text-3xl mb-2">🏍️</div>
+                  <div className="font-bold text-gray-900 text-sm">Conductor</div>
+                  <div className="text-xs text-gray-500 mt-1">Pa' donde vamos</div>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

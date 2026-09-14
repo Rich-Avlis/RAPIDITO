@@ -20,6 +20,7 @@ interface Wallet {
 export default function DriverWalletPage() {
   const { user } = useAuth()
   const [wallet, setWallet] = useState<Wallet | null>(null)
+  const [driverProfile, setDriverProfile] = useState<any>(null)
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [withdrawNotes, setWithdrawNotes] = useState('')
   const [isWithdrawing, setIsWithdrawing] = useState(false)
@@ -27,7 +28,20 @@ export default function DriverWalletPage() {
 
   useEffect(() => {
     fetchWallet()
+    fetchProfile()
   }, [])
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch('/api/drivers/profile')
+      const data = await res.json()
+      if (data.success) {
+        setDriverProfile(data.data)
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error)
+    }
+  }
 
   const fetchWallet = async () => {
     try {
@@ -135,37 +149,52 @@ export default function DriverWalletPage() {
             <CardTitle>💸 Solicitar Retiro</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-orange-50 rounded-xl p-4 mb-4">
-              <p className="text-sm font-bold text-orange-800">Datos de pago (PagoMóvil)</p>
-              <p className="text-sm text-orange-700 mt-1">
-                Banco: 0102 | Teléfono: 04125203740 | CI: 29673250 | Nombre: Rapidito C.A.
-              </p>
-            </div>
+            {driverProfile?.payment?.bank ? (
+              <div className="bg-orange-50 rounded-xl p-4 mb-4">
+                <p className="text-sm font-bold text-orange-800">Tu Pago Móvil registrado</p>
+                <p className="text-sm text-orange-700 mt-1">
+                  Banco: {driverProfile.payment.bank} | Tel: +58{driverProfile.payment.phone} | CI: {driverProfile.payment.cedula}
+                </p>
+                <p className="text-sm text-orange-700">
+                  Titular: {driverProfile.payment.name}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-red-50 rounded-xl p-4 mb-4">
+                <p className="text-sm font-bold text-red-800">⚠️ Datos de Pago Móvil no registrados</p>
+                <p className="text-sm text-red-600 mt-1">
+                  Debes registrar tu Pago Móvil antes de solicitar un retiro.
+                </p>
+                <Link href="/driver/profile" className="text-sm text-red-700 font-bold underline mt-2 inline-block">
+                  Ir a Mi Perfil →
+                </Link>
+              </div>
+            )}
             <div className="space-y-3">
               <Input
                 type="number"
-                placeholder="Monto a retirar (mínimo $5.00)"
+                placeholder="Monto a retirar (mínimo $10.00)"
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
-                min="5"
+                min="10"
                 step="0.01"
               />
               <Input
-                placeholder="Datos de pago (teléfono, cédula, banco)"
+                placeholder="Referencia o nota (opcional)"
                 value={withdrawNotes}
                 onChange={(e) => setWithdrawNotes(e.target.value)}
               />
               <Button
                 onClick={handleWithdraw}
                 isLoading={isWithdrawing}
-                disabled={!withdrawAmount || parseFloat(withdrawAmount) < 5}
+                disabled={!withdrawAmount || parseFloat(withdrawAmount) < 10 || !driverProfile?.payment?.bank}
                 className="w-full"
               >
                 Solicitar Retiro
               </Button>
             </div>
             <p className="mt-2 text-sm text-gray-500">
-              Saldo disponible: <strong>${wallet.balance.toFixed(2)}</strong> | Mínimo: $5.00
+              Saldo disponible: <strong>${wallet.balance.toFixed(2)}</strong> | Mínimo: $10.00
             </p>
           </CardContent>
         </Card>

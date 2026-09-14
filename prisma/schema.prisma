@@ -125,6 +125,12 @@ model DriverProfile {
   completedTrips Int      @default(0)
   rating         Float    @default(5.0)
   totalRatings   Int      @default(0)
+  licenseNumber  String?
+  licenseExpiry  DateTime?
+  paymentBank    String?
+  paymentPhone   String?
+  paymentCedula  String?
+  paymentName    String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

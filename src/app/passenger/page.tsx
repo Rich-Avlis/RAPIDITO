@@ -438,12 +438,33 @@ export default function PassengerDashboard() {
     }
   }, [searchQuery, searchPlaces])
 
-  const handleSelectSuggestion = (suggestion: SearchSuggestion) => {
+  const handleSelectSuggestion = async (suggestion: SearchSuggestion) => {
     if (selectingField === 'origin') {
       setOrigin(suggestion)
     } else {
       setDestination(suggestion)
       addToHistory(suggestion)
+      // Calculate fare estimate
+      try {
+        const res = await fetch('/api/rides/estimate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            originLat: origin.lat,
+            originLng: origin.lng,
+            destLat: suggestion.lat,
+            destLng: suggestion.lng,
+            originAddress: origin.name,
+            destAddress: suggestion.name,
+          }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          setRideEstimate(data.data)
+        }
+      } catch (e) {
+        console.error('Estimate error:', e)
+      }
     }
     setSearchQuery('')
     setSearchSuggestions([])
@@ -453,11 +474,30 @@ export default function PassengerDashboard() {
     }
   }
 
-  const handleSelectFromHistory = (place: SearchSuggestion) => {
+  const handleSelectFromHistory = async (place: SearchSuggestion) => {
     if (selectingField === 'origin') {
       setOrigin(place)
     } else {
       setDestination(place)
+      // Calculate fare estimate
+      try {
+        const res = await fetch('/api/rides/estimate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            originLat: origin.lat,
+            originLng: origin.lng,
+            destLat: place.lat,
+            destLng: place.lng,
+            originAddress: origin.name,
+            destAddress: place.name,
+          }),
+        })
+        const data = await res.json()
+        if (data.success) setRideEstimate(data.data)
+      } catch (e) {
+        console.error('Estimate error:', e)
+      }
     }
     setSelectingField(null)
     if (selectingField === 'destination') {
@@ -480,6 +520,25 @@ export default function PassengerDashboard() {
       } else if (selectingField === 'destination') {
         setDestination(place)
         addToHistory(place)
+        // Calculate fare estimate
+        try {
+          const estRes = await fetch('/api/rides/estimate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              originLat: origin.lat,
+              originLng: origin.lng,
+              destLat: lat,
+              destLng: lng,
+              originAddress: origin.name,
+              destAddress: name,
+            }),
+          })
+          const estData = await estRes.json()
+          if (estData.success) setRideEstimate(estData.data)
+        } catch (e) {
+          console.error('Estimate error:', e)
+        }
         setSelectingField(null)
         setPanelView('vehicles')
       }
@@ -499,8 +558,8 @@ export default function PassengerDashboard() {
   }
 
   const vehicleTypes = [
-    { id: '2db9fd01-760d-4561-bd92-bb85e62c5c04', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min', image: '🛵' },
-    { id: 'b3023f91-f02b-4d23-a37f-60c075da3a23', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min', image: '🚙' },
+    { id: '2db9fd01-760d-4561-bd92-bb85e62c5c04', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min', image: '🛵', type: 'moto' },
+    { id: 'b3023f91-f02b-4d23-a37f-60c075da3a23', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min', image: '🚙', type: 'car' },
   ]
 
   const mapMarkers = [
@@ -1004,10 +1063,39 @@ export default function PassengerDashboard() {
                 return (
                   <button
                     key={vehicle.id}
-                    onClick={() => {
+                    onClick={async () => {
                       setSelectedVehicle(vehicle.id)
-                      setRideEstimate({ ...rideEstimate, selectedVehicle: vehicle, estimatedFare: discountedPrice })
-                      setCustomPrice(discountedPrice)
+                      // Recalculate fare for this vehicle type
+                      if (origin && destination) {
+                        try {
+                          const res = await fetch('/api/rides/estimate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              originLat: origin.lat,
+                              originLng: origin.lng,
+                              destLat: destination.lat,
+                              destLng: destination.lng,
+                              originAddress: origin.name,
+                              destAddress: destination.name,
+                              vehicleType: vehicle.type,
+                            }),
+                          })
+                          const data = await res.json()
+                          if (data.success) {
+                            const disc = getDiscount()
+                            const finalPrice = data.data.estimatedFare * (1 - disc / 100)
+                            setRideEstimate({ ...data.data, selectedVehicle: vehicle, estimatedFare: finalPrice })
+                            setCustomPrice(finalPrice)
+                          }
+                        } catch (e) {
+                          setRideEstimate({ ...rideEstimate, selectedVehicle: vehicle, estimatedFare: discountedPrice })
+                          setCustomPrice(discountedPrice)
+                        }
+                      } else {
+                        setRideEstimate({ ...rideEstimate, selectedVehicle: vehicle, estimatedFare: discountedPrice })
+                        setCustomPrice(discountedPrice)
+                      }
                       setPanelView('vehicleDetail')
                     }}
                     className="min-w-[160px] rounded-2xl p-5 text-left border-2 border-transparent transition-all"
@@ -1031,6 +1119,11 @@ export default function PassengerDashboard() {
                         <p className="font-bold text-xl" style={{ color: t.text }}>${basePrice.toFixed(2)} ↑</p>
                       )}
                     </div>
+                    {rideEstimate?.distance && (
+                      <p className="text-xs mt-2" style={{ color: t.textSecondary }}>
+                        📍 {rideEstimate.distance} km · {rideEstimate.duration} min
+                      </p>
+                    )}
                   </button>
                 )
               })}
@@ -1082,6 +1175,16 @@ export default function PassengerDashboard() {
                   <h2 className="text-2xl font-bold" style={{ color: t.text }}>{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
                   <p style={{ color: t.textSecondary }}>Capacidad Máxima</p>
                   <p className="text-lg" style={{ color: t.text }}>👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
+                  {rideEstimate?.distance && (
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-sm px-2 py-1 rounded-lg" style={{ backgroundColor: t.bgTertiary, color: t.textSecondary }}>
+                        📍 {rideEstimate.distance} km
+                      </span>
+                      <span className="text-sm px-2 py-1 rounded-lg" style={{ backgroundColor: t.bgTertiary, color: t.textSecondary }}>
+                        ⏱️ {rideEstimate.duration} min
+                      </span>
+                    </div>
+                  )}
                   {selectedVehicle === 'moto' && (
                     <p className="text-sm mt-2" style={{ color: t.textSecondary }}>Es necesario el uso del casco para este servicio</p>
                   )}
