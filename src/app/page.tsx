@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import FluidOrb from '@/components/ui/fluid-orb'
 
 export default function HomePage() {
   return (
@@ -30,6 +31,13 @@ export default function HomePage() {
       {/* Hero Section */}
       <main className="flex-1">
         <section className="relative overflow-hidden bg-gradient-to-br from-[#FF6B00]/5 via-white to-[#FF6B00]/10 py-20">
+          {/* FluidOrb decorations */}
+          <div className="absolute -top-20 -right-20 opacity-40 pointer-events-none">
+            <FluidOrb size={320} color="#FF6B00" />
+          </div>
+          <div className="absolute -bottom-32 -left-32 opacity-25 pointer-events-none">
+            <FluidOrb size={400} color="#E55D00" />
+          </div>
           {/* Decorative elements - Lara icons */}
           <div className="absolute top-10 left-10 text-6xl opacity-10 animate-float">
             <svg viewBox="0 0 100 200" className="w-16 h-32 text-[#FF6B00]">
@@ -293,8 +301,14 @@ export default function HomePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-r from-[#FF6B00] to-[#E55D00]">
-          <div className="container mx-auto px-4 text-center">
+        <section className="relative overflow-hidden py-20 bg-gradient-to-r from-[#FF6B00] to-[#E55D00]">
+          <div className="absolute -top-16 -left-16 opacity-20 pointer-events-none">
+            <FluidOrb size={280} color="#FFFFFF" />
+          </div>
+          <div className="absolute -bottom-20 -right-20 opacity-15 pointer-events-none">
+            <FluidOrb size={350} color="#FFFFFF" />
+          </div>
+          <div className="container mx-auto px-4 text-center relative z-10">
             <h2 className="mb-6 text-3xl font-bold text-white">
               ¿Listo pa' viajar, chamo?
             </h2>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/providers/auth-provider'
+import FluidOrb from '@/components/ui/fluid-orb'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -195,6 +196,14 @@ export default function LoginPage() {
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Map Background */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
+
+      {/* FluidOrb decorations */}
+      <div className="absolute -top-24 -right-24 z-[1] opacity-30 pointer-events-none">
+        <FluidOrb size={300} color="#FF6B00" />
+      </div>
+      <div className="absolute -bottom-32 -left-32 z-[1] opacity-20 pointer-events-none">
+        <FluidOrb size={380} color="#E55D00" />
+      </div>
 
       {/* Overlay */}
       <div className="absolute inset-0 z-10 bg-gradient-to-b from-white/80 via-white/60 to-white/80" />

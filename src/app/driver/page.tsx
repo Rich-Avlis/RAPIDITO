@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import FluidOrb from '@/components/ui/fluid-orb'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
@@ -132,7 +133,12 @@ export default function DriverDashboard() {
           {/* Status Panel */}
           <div className="lg:col-span-1 space-y-6">
             {/* Online Status */}
-            <Card>
+            <Card className="relative overflow-hidden">
+              {isOnline && (
+                <div className="absolute -top-8 -right-8 opacity-30 pointer-events-none">
+                  <FluidOrb size={120} color="#22C55E" />
+                </div>
+              )}
               <CardHeader>
                 <CardTitle className="text-center">
                   {isOnline ? (

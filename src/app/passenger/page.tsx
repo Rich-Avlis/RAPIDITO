@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { useTheme, themes } from '@/providers/theme-provider'
+import FluidOrb from '@/components/ui/fluid-orb'
 import dynamic from 'next/dynamic'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
 
@@ -747,8 +748,11 @@ export default function PassengerDashboard() {
       <div className="relative z-[1000] rounded-t-[2rem] shadow-[0_-4px_20px_rgba(0,0,0,0.1)]" style={{ backgroundColor: t.bgSecondary }}>
         {/* HOME VIEW */}
         {panelView === 'home' && (
-          <div>
-            <div className="p-5 space-y-4">
+          <div className="relative overflow-hidden">
+            <div className="absolute -top-16 -right-16 opacity-15 pointer-events-none">
+              <FluidOrb size={180} color="#FF6B00" />
+            </div>
+            <div className="p-5 space-y-4 relative z-10">
               {/* Where to? Search Bar */}
               <button
                 onClick={() => {
