@@ -210,7 +210,7 @@ export default function LoginPage() {
 
       {/* Login Card */}
       <div className="relative z-20 w-full max-w-md mx-4">
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
+        <div className="glass-strong rounded-3xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FF6B00] text-white font-bold text-3xl shadow-lg shadow-[#FF6B00]/30">
@@ -225,7 +225,7 @@ export default function LoginPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">Teléfono</label>
               <div className="flex">
-                <span className="flex items-center rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 font-medium">
+                <span className="flex items-center rounded-l-xl border border-r-0 border-white/30 glass-subtle px-4 py-3 text-sm text-gray-600 font-medium">
                   +58
                 </span>
                 <input
@@ -233,7 +233,7 @@ export default function LoginPage() {
                   placeholder="412 1234567"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
-                  className="flex-1 rounded-r-xl border border-gray-200 px-4 py-3 text-sm focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
+                  className="flex-1 rounded-r-xl glass-input px-4 py-3 text-sm focus:outline-none"
                 />
               </div>
               {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
@@ -247,7 +247,7 @@ export default function LoginPage() {
                   placeholder="Tu contraseña"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 pr-12 text-sm focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
+                  className="w-full rounded-xl glass-input px-4 py-3 pr-12 text-sm focus:outline-none"
                 />
                 <button
                   type="button"
@@ -276,7 +276,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#FF6B00]/30 hover:bg-[#E55D00] transition-colors disabled:opacity-50 cursor-pointer"
+              className="w-full glass-btn text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -308,7 +308,7 @@ export default function LoginPage() {
             </div>
 
             <Link href="/login-otp">
-              <button className="w-full border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/5 transition-colors cursor-pointer">
+              <button className="w-full glass-card border-[#FF6B00]/30 text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/10 transition-colors cursor-pointer">
                 📱 Iniciar sesión con código SMS
               </button>
             </Link>
@@ -323,14 +323,14 @@ export default function LoginPage() {
 
           {/* Role Selection */}
           {pendingUser && !roleChoice && (
-            <div className="mt-6 p-4 bg-orange-50 rounded-2xl">
+            <div className="mt-6 glass-orange rounded-2xl p-4">
               <p className="text-center text-sm font-bold text-gray-900 mb-3">
                 ¿Cómo quieres usar RAPIDITO?
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => handleRoleSelect('PASSENGER')}
-                  className="p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-[#FF6B00] transition-colors text-center"
+                  className="p-4 rounded-xl glass-card text-center"
                 >
                   <div className="text-3xl mb-2">🚗</div>
                   <div className="font-bold text-gray-900 text-sm">Pasajero</div>
@@ -338,7 +338,7 @@ export default function LoginPage() {
                 </button>
                 <button
                   onClick={() => handleRoleSelect('DRIVER')}
-                  className="p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-[#FF6B00] transition-colors text-center"
+                  className="p-4 rounded-xl glass-card text-center"
                 >
                   <div className="text-3xl mb-2">🏍️</div>
                   <div className="font-bold text-gray-900 text-sm">Conductor</div>

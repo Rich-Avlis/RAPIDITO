@@ -216,7 +216,7 @@ export default function DocumentCapturePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-50 border-b bg-white">
+      <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Link href="/driver" className="p-2 rounded-xl hover:bg-gray-100">

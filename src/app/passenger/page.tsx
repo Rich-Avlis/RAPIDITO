@@ -723,7 +723,7 @@ export default function PassengerDashboard() {
         {/* Security Banner - Overlay on map */}
         {panelView === 'home' && (
           <div className="absolute bottom-4 left-4 right-4 z-10">
-            <div className="rounded-2xl p-4 shadow-lg flex items-center gap-3" style={{ backgroundColor: t.bgSecondary }}>
+            <div className="rounded-2xl p-4 glass-card flex items-center gap-3" style={{ backgroundColor: t.bgSecondary }}>
               <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -736,7 +736,7 @@ export default function PassengerDashboard() {
 
         {/* Compass Button - Overlay on map */}
         <div className="absolute right-4 bottom-4 z-10">
-          <button className="bg-white rounded-full p-3 shadow-lg">
+          <button className="glass-card rounded-full p-3">
             <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9l5-5 5 5" />
             </svg>
@@ -745,7 +745,7 @@ export default function PassengerDashboard() {
       </div>
 
       {/* Bottom Panel */}
-      <div className="relative z-[1000] rounded-t-[2rem] shadow-[0_-4px_20px_rgba(0,0,0,0.1)]" style={{ backgroundColor: t.bgSecondary }}>
+      <div className="relative z-[1000] glass-panel rounded-t-[2rem]" style={{ backgroundColor: t.bgSecondary }}>
         {/* HOME VIEW */}
         {panelView === 'home' && (
           <div className="relative overflow-hidden">
@@ -760,8 +760,7 @@ export default function PassengerDashboard() {
                   setSelectingField('destination')
                   setTimeout(() => searchInputRef.current?.focus(), 100)
                 }}
-                className="w-full rounded-2xl px-5 py-4 flex items-center gap-4 text-left hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: t.bgTertiary }}
+                className="w-full glass-card rounded-2xl px-5 py-4 flex items-center gap-4 text-left hover:opacity-80 transition-opacity"
               >
                 <div className="w-3 h-3 rounded-full bg-black" />
                 <span className="text-lg" style={{ color: t.textSecondary }}>Pa' donde vas</span>

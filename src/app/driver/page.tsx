@@ -109,7 +109,7 @@ export default function DriverDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-white">
+      <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">
@@ -133,7 +133,7 @@ export default function DriverDashboard() {
           {/* Status Panel */}
           <div className="lg:col-span-1 space-y-6">
             {/* Online Status */}
-            <Card className="relative overflow-hidden">
+            <Card className="glass-card relative overflow-hidden border-0">
               {isOnline && (
                 <div className="absolute -top-8 -right-8 opacity-30 pointer-events-none">
                   <FluidOrb size={120} color="#22C55E" />
@@ -166,7 +166,7 @@ export default function DriverDashboard() {
             </Card>
 
             {/* Today's Stats */}
-            <Card>
+            <Card className="glass-card border-0">
               <CardHeader>
                 <CardTitle>Ganancias de hoy</CardTitle>
               </CardHeader>
@@ -192,7 +192,7 @@ export default function DriverDashboard() {
             </Card>
 
             {/* Quick Actions */}
-            <Card>
+            <Card className="glass-card border-0">
               <CardContent className="p-4 space-y-2">
                 <Link href="/driver/profile">
                   <Button variant="outline" className="w-full justify-start">

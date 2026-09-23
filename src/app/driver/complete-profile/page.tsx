@@ -111,7 +111,7 @@ export default function CompleteDriverProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10">
-      <header className="sticky top-0 z-50 border-b bg-white shadow-sm">
+      <header className="sticky top-0 z-50 glass-header shadow-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">R</div>

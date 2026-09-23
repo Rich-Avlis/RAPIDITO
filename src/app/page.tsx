@@ -9,7 +9,7 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF6B00] text-white font-bold text-xl shadow-lg shadow-[#FF6B00]/30">
@@ -128,7 +128,7 @@ export default function HomePage() {
                   </div>
                   
                   {/* Floating driver card */}
-                  <div className="absolute -left-10 top-10 rounded-xl bg-white p-4 shadow-xl animate-ride">
+                  <div className="absolute -left-10 top-10 rounded-2xl glass-card p-4 animate-ride">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FF6B00]/10 text-[#FF6B00] font-bold">
                         CM
@@ -142,7 +142,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Floating ride card */}
-                  <div className="absolute -right-5 bottom-20 rounded-xl bg-white p-4 shadow-xl animate-float">
+                  <div className="absolute -right-5 bottom-20 rounded-2xl glass-card p-4 animate-float">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 text-xl">
                         ✅
@@ -156,7 +156,7 @@ export default function HomePage() {
                   </div>
 
                   {/* La Tinaja de Quíbor */}
-                  <div className="absolute -right-5 top-20 rounded-xl bg-white p-3 shadow-xl">
+                  <div className="absolute -right-5 top-20 rounded-2xl glass-card p-3">
                     <div className="flex items-center gap-2">
                       <svg viewBox="0 0 80 60" className="w-12 h-10 text-[#FF6B00]">
                         <ellipse cx="40" cy="30" rx="35" ry="25" fill="currentColor" opacity="0.3"/>
@@ -216,7 +216,7 @@ export default function HomePage() {
               <p className="text-gray-600">La mejor experiencia de transporte en Lara</p>
             </div>
             <div className="grid gap-8 md:grid-cols-3">
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <Card className="glass-card border-0">
                 <CardContent className="p-8 text-center">
                   <div className="mb-4 text-5xl">⚡</div>
                   <h3 className="mb-3 text-xl font-semibold text-gray-900">Rápido como el viento</h3>
@@ -225,7 +225,7 @@ export default function HomePage() {
                   </p>
                 </CardContent>
               </Card>
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <Card className="glass-card border-0">
                 <CardContent className="p-8 text-center">
                   <div className="mb-4 text-5xl">🛡️</div>
                   <h3 className="mb-3 text-xl font-semibold text-gray-900">Seguro como casa</h3>
@@ -234,7 +234,7 @@ export default function HomePage() {
                   </p>
                 </CardContent>
               </Card>
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <Card className="glass-card border-0">
                 <CardContent className="p-8 text-center">
                   <div className="mb-4 text-5xl">💰</div>
                   <h3 className="mb-3 text-xl font-semibold text-gray-900">Económico, mi pana</h3>
@@ -332,7 +332,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-white py-8">
+      <footer className="glass-header border-t-0 py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2">
