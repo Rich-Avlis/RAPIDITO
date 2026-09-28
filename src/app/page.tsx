@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import FluidOrb from '@/components/ui/fluid-orb'
 
+const HERO_ROUTE =
+  'M60 340 L60 226 Q60 210 76 210 L124 210 Q140 210 140 194 L140 146 Q140 130 156 130 L220 130'
+
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -115,25 +118,73 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Right - Visual with Lara landmarks */}
+              {/* Right - Animated route map */}
               <div className="relative hidden lg:block">
                 <div className="relative mx-auto h-96 w-96">
-                  {/* Map background */}
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#FF6B00]/20 to-[#FF6B00]/5 shadow-2xl">
-                    <div className="flex h-full items-center justify-center">
-                      <div className="text-center">
-                        {/* Obelisco de Barquisimeto */}
-                        <div className="mb-4">
-                          <svg viewBox="0 0 100 200" className="w-20 h-40 mx-auto text-[#FF6B00]">
-                            <polygon points="50,0 60,180 40,180" fill="currentColor" opacity="0.6"/>
-                            <polygon points="45,180 55,180 52,200 48,200" fill="currentColor" opacity="0.7"/>
-                            <circle cx="50" cy="10" r="5" fill="currentColor" opacity="0.8"/>
-                          </svg>
-                        </div>
-                        <p className="text-[#FF6B00] font-medium">Obelisco de Barquisimeto</p>
-                        <p className="text-xs text-gray-500 mt-1">Capital Musical de Venezuela</p>
-                      </div>
-                    </div>
+                  {/* Map card */}
+                  <div className="absolute inset-0 overflow-hidden rounded-3xl border border-white/80 bg-[#F3EEE7] shadow-[0_24px_64px_rgba(0,0,0,0.16)] ring-1 ring-black/5">
+                    <svg viewBox="0 0 400 400" className="h-full w-full" aria-hidden="true">
+                      {/* Base blocks */}
+                      <rect width="400" height="400" fill="#F3EEE7" />
+                      {/* Parks */}
+                      <rect x="70" y="60" width="60" height="60" rx="8" fill="#DCFCE7" />
+                      <rect x="310" y="300" width="45" height="45" rx="8" fill="#DCFCE7" opacity="0.8" />
+                      {/* Buildings */}
+                      <g fill="#E7DFD4">
+                        <rect x="75" y="145" width="50" height="55" rx="4" />
+                        <rect x="155" y="60" width="55" height="55" rx="4" />
+                        <rect x="235" y="145" width="50" height="50" rx="4" />
+                        <rect x="75" y="225" width="50" height="50" rx="4" />
+                        <rect x="235" y="305" width="50" height="45" rx="4" />
+                        <rect x="310" y="145" width="40" height="50" rx="4" />
+                        <rect x="155" y="305" width="55" height="45" rx="4" />
+                        <rect x="310" y="60" width="40" height="55" rx="4" />
+                      </g>
+                      {/* Streets */}
+                      <g stroke="#FFFFFF" strokeLinecap="round">
+                        <line x1="0" y1="55" x2="400" y2="55" strokeWidth="10" />
+                        <line x1="0" y1="130" x2="400" y2="130" strokeWidth="14" />
+                        <line x1="0" y1="210" x2="400" y2="210" strokeWidth="14" />
+                        <line x1="0" y1="290" x2="400" y2="290" strokeWidth="10" />
+                        <line x1="0" y1="360" x2="400" y2="360" strokeWidth="10" />
+                        <line x1="60" y1="0" x2="60" y2="400" strokeWidth="10" />
+                        <line x1="140" y1="0" x2="140" y2="400" strokeWidth="10" />
+                        <line x1="220" y1="0" x2="220" y2="400" strokeWidth="10" />
+                        <line x1="300" y1="0" x2="300" y2="400" strokeWidth="10" />
+                        <line x1="360" y1="0" x2="360" y2="400" strokeWidth="14" />
+                      </g>
+                      {/* Route */}
+                      <path d={HERO_ROUTE} fill="none" stroke="#FFFFFF" strokeWidth="13" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d={HERO_ROUTE} fill="none" stroke="#FF6B00" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d={HERO_ROUTE} fill="none" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" strokeDasharray="10 14" opacity="0.85" className="route-flow" />
+                      {/* Origin ping */}
+                      <circle cx="60" cy="340" r="8" fill="none" stroke="#FF6B00" strokeWidth="3">
+                        <animate attributeName="r" values="8;24" dur="1.8s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.6;0" dur="1.8s" repeatCount="indefinite" />
+                      </circle>
+                      <circle cx="60" cy="340" r="7" fill="#FF6B00" stroke="#FFFFFF" strokeWidth="3" />
+                      <text x="60" y="372" textAnchor="middle" fontSize="11" fontWeight="600" fill="#6b7280">
+                        Tu ubicación
+                      </text>
+                      {/* Destination pin */}
+                      <path
+                        d="M220 130 C212 118 207 112 207 106 A13 13 0 1 1 233 106 C233 112 228 118 220 130 Z"
+                        fill="#FF6B00"
+                        stroke="#FFFFFF"
+                        strokeWidth="2"
+                      />
+                      <circle cx="220" cy="106" r="5" fill="#FFFFFF" />
+                      <text x="240" y="110" fontSize="11" fontWeight="600" fill="#6b7280">
+                        Destino
+                      </text>
+                      {/* Moving motorcycle */}
+                      <g>
+                        <ellipse cx="0" cy="15" rx="10" ry="3" fill="rgba(0,0,0,0.12)" />
+                        <circle r="13" fill="#FFFFFF" stroke="#FF6B00" strokeWidth="2.5" />
+                        <text x="0" y="5" textAnchor="middle" fontSize="13">🏍️</text>
+                        <animateMotion dur="7s" repeatCount="indefinite" path={HERO_ROUTE} />
+                      </g>
+                    </svg>
                   </div>
                   
                   {/* Floating driver card */}

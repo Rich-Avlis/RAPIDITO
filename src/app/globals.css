@@ -298,3 +298,14 @@ body {
     radial-gradient(1000px 700px at 50% 115%, rgba(255, 159, 67, 0.1), transparent 60%),
     linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
 }
+
+/* ============================================
+   HERO MAP ROUTE ANIMATION
+   ============================================ */
+@keyframes route-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+.route-flow {
+  animation: route-flow 0.9s linear infinite;
+}
