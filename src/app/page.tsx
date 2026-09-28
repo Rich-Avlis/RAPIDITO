@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import FluidOrb from '@/components/ui/fluid-orb'
@@ -12,9 +13,14 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF6B00] text-white font-bold text-xl shadow-lg shadow-[#FF6B00]/30">
-              R
-            </div>
+            <Image
+              src="/logo-r.png"
+              alt="R RAPIDITO"
+              width={48}
+              height={33}
+              priority
+              className="h-9 w-auto drop-shadow-md"
+            />
             <span className="text-xl font-bold text-gray-900">RAPIDITO</span>
           </div>
           <div className="flex items-center gap-4">
