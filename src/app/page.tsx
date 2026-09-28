@@ -9,6 +9,15 @@ import FluidOrb from '@/components/ui/fluid-orb'
 const HERO_ROUTE =
   'M60 340 L60 226 Q60 210 76 210 L124 210 Q140 210 140 194 L140 146 Q140 130 156 130 L220 130'
 
+const LARA_PATH =
+  'M878.5 597.6L890.0 569.7L882.9 523.4L831.7 548.7L830.6 586.1L815.5 581.7L800.9 554.9L803.9 521.2L787.0 513.7L780.5 493.5L785.3 475.1L816.8 472.6L829.6 431.1L836.5 437.2L861.3 428.7L854.0 355.8L838.9 360.1L835.0 351.9L847.0 309.7L871.9 295.0L892.2 301.0L916.9 275.5L920.0 254.7L908.1 235.9L891.5 231.2L834.7 249.9L829.3 239.1L777.0 232.1L708.8 228.2L652.1 237.6L651.7 215.4L578.7 225.0L560.5 214.0L523.8 231.6L525.1 215.2L424.8 258.2L390.1 249.0L375.1 257.6L375.3 269.0L334.0 291.8L318.3 283.8L306.1 289.4L305.8 298.0L283.9 307.9L282.9 324.4L268.7 338.5L256.1 331.2L231.4 342.5L211.2 391.7L159.7 402.7L155.6 442.6L141.3 465.6L98.2 489.0L80.0 510.3L118.4 565.1L140.5 576.2L159.0 577.7L163.8 532.0L181.4 514.1L237.5 581.3L244.7 577.4L252.8 587.8L274.8 571.3L296.4 571.6L313.4 593.7L311.9 606.0L331.9 605.9L348.0 632.5L359.0 597.6L389.4 631.6L416.5 632.7L450.9 667.1L413.4 668.2L396.2 695.9L401.8 731.2L416.4 748.2L413.9 771.1L434.7 779.3L452.6 762.8L441.2 753.2L460.1 726.4L516.4 714.4L518.9 737.0L491.8 782.2L517.6 784.9L554.4 768.7L567.3 782.6L594.1 786.0L606.6 759.0L607.8 719.2L628.3 733.1L681.9 722.2L683.7 705.7L706.5 703.8L701.6 693.9L711.5 684.7L721.8 635.7L748.9 596.2L755.7 651.8L787.0 668.8L840.8 653.1L845.7 640.3L871.5 630.1L878.5 597.6Z'
+
+const LARA_CITIES = [
+  { name: 'Carora', x: 338, y: 457, lx: 338, ly: 420 },
+  { name: 'Barquisimeto', x: 718, y: 503, lx: 718, ly: 465 },
+  { name: 'El Tocuyo', x: 543, y: 623, lx: 520, ly: 672 },
+]
+
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -328,21 +337,122 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex justify-center">
-                <div className="relative">
-                  {/* Obelisco */}
-                  <svg viewBox="0 0 100 250" className="w-32 h-64 text-[#FF6B00]">
-                    <polygon points="50,0 65,220 35,220" fill="currentColor" opacity="0.8"/>
-                    <polygon points="30,220 70,220 65,250 35,250" fill="currentColor" opacity="0.9"/>
-                    <circle cx="50" cy="10" r="8" fill="currentColor"/>
-                    {/* Base details */}
-                    <rect x="25" y="230" width="50" height="20" fill="currentColor" opacity="0.7"/>
+                <div className="glass-card animate-float relative rounded-3xl p-6">
+                  <svg
+                    viewBox="0 0 1000 1000"
+                    className="h-64 w-64 sm:h-80 sm:w-80 lg:h-96 lg:w-96"
+                    role="img"
+                    aria-label="Mapa animado del estado Lara, Venezuela"
+                  >
+                    <defs>
+                      <linearGradient id="laraGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#FFD9B8" />
+                        <stop offset="45%" stopColor="#FFA45C" />
+                        <stop offset="100%" stopColor="#FF6B00" />
+                      </linearGradient>
+                      <linearGradient id="laraStroke" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#FF8A3D" />
+                        <stop offset="100%" stopColor="#E55D00" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* glow under state */}
+                    <path
+                      d={LARA_PATH}
+                      fill="#FF6B00"
+                      transform="translate(8 14)"
+                      className="lara-glow"
+                    />
+
+                    {/* fill */}
+                    <path d={LARA_PATH} fill="url(#laraGrad)" className="lara-fill" />
+
+                    {/* outline draw-in */}
+                    <path
+                      d={LARA_PATH}
+                      fill="none"
+                      stroke="url(#laraStroke)"
+                      strokeWidth="8"
+                      strokeLinejoin="round"
+                      className="lara-draw"
+                    />
+
+                    {/* flowing dashes along border */}
+                    <path
+                      d={LARA_PATH}
+                      fill="none"
+                      stroke="#FFFFFF"
+                      strokeWidth="5"
+                      strokeDasharray="20 28"
+                      strokeLinecap="round"
+                      className="lara-flow"
+                    />
+
+                    {/* cities */}
+                    <g className="lara-cities">
+                      {LARA_CITIES.map((c) => (
+                        <g key={c.name}>
+                          <circle cx={c.x} cy={c.y} r="12" fill="#fff" />
+                          <circle cx={c.x} cy={c.y} r="7" fill="#4B5563" />
+                          <text
+                            x={c.lx}
+                            y={c.ly}
+                            textAnchor="middle"
+                            fontSize="34"
+                            fontWeight="700"
+                            fill="#374151"
+                            stroke="#fff"
+                            strokeWidth="10"
+                            style={{ paintOrder: 'stroke' }}
+                          >
+                            {c.name}
+                          </text>
+                        </g>
+                      ))}
+                    </g>
+
+                    {/* Quíbor origin pin */}
+                    <g className="lara-cities">
+                      <circle cx="608" cy="560" r="16" fill="#FF6B00">
+                        <animate
+                          attributeName="r"
+                          values="16;48;48"
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          values="0.55;0;0"
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                      <path
+                        d="M0 0 c-8 -14 -25 -26 -25 -44 a25 25 0 1 1 50 0 c0 18 -17 30 -25 44 z"
+                        transform="translate(608 560)"
+                        fill="#FF6B00"
+                        stroke="#fff"
+                        strokeWidth="7"
+                        strokeLinejoin="round"
+                      />
+                      <circle cx="608" cy="516" r="9" fill="#fff" />
+                      <text
+                        x="646"
+                        y="592"
+                        fontSize="38"
+                        fontWeight="800"
+                        fill="#C2410C"
+                        stroke="#fff"
+                        strokeWidth="11"
+                        style={{ paintOrder: 'stroke' }}
+                      >
+                        Quíbor
+                      </text>
+                    </g>
                   </svg>
-                  {/* Tinaja */}
-                  <svg viewBox="0 0 150 100" className="w-40 h-28 text-[#FF6B00] -mt-8 ml-20">
-                    <ellipse cx="75" cy="50" rx="60" ry="40" fill="currentColor" opacity="0.6"/>
-                    <ellipse cx="100" cy="40" rx="40" ry="30" fill="currentColor" opacity="0.7"/>
-                    <ellipse cx="50" cy="55" rx="30" ry="20" fill="currentColor" opacity="0.65"/>
-                  </svg>
+                  <p className="mt-2 text-center text-xs font-medium text-gray-500">
+                    Estado Lara · Quíbor 9.93°N 69.62°O
+                  </p>
                 </div>
               </div>
             </div>

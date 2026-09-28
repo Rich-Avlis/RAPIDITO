@@ -309,3 +309,50 @@ body {
 .route-flow {
   animation: route-flow 0.9s linear infinite;
 }
+
+/* ============================================
+   LARA STATE MAP ANIMATION
+   ============================================ */
+@keyframes lara-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.lara-draw {
+  stroke-dasharray: 3400;
+  stroke-dashoffset: 3400;
+  animation: lara-draw 2.2s ease-out 0.2s forwards;
+}
+
+@keyframes lara-fade {
+  to { opacity: 1; }
+}
+
+@keyframes lara-glow-fade {
+  to { opacity: 0.3; }
+}
+
+.lara-fill {
+  opacity: 0;
+  animation: lara-fade 1s ease 1.2s forwards;
+}
+
+.lara-glow {
+  opacity: 0;
+  animation: lara-glow-fade 1s ease 1.2s forwards;
+}
+
+@keyframes lara-flow {
+  to { stroke-dashoffset: -96; }
+}
+
+.lara-flow {
+  opacity: 0;
+  animation:
+    lara-fade 0.6s ease 2.2s forwards,
+    lara-flow 1.8s linear infinite;
+}
+
+.lara-cities {
+  opacity: 0;
+  animation: lara-fade 0.8s ease 2s forwards;
+}
