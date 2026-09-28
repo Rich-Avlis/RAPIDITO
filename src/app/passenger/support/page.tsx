@@ -67,7 +67,7 @@ export default function PassengerSupport() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: t.bg }}>
       {/* Header */}
-      <div className="p-4 flex items-center gap-4" style={{ backgroundColor: t.bgSecondary }}>
+      <div className="p-4 flex items-center gap-4 glass-header" style={{ backgroundColor: t.bgSecondary }}>
         <Link href="/passenger" className="p-2 rounded-xl" style={{ backgroundColor: t.bgTertiary }}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.text }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -80,21 +80,21 @@ export default function PassengerSupport() {
       <div className="p-4 grid grid-cols-2 gap-3">
         <button
           onClick={() => setShowContactForm(true)}
-          className="rounded-2xl p-4 text-center"
+          className="glass-card rounded-2xl p-4 text-center"
           style={{ backgroundColor: t.primary }}
         >
           <span className="text-2xl">💬</span>
-          <p className="text-sm font-bold text-white mt-2">Crear Ticket</p>
+          <p className="text-sm font-bold text-gray-900 mt-2">Crear Ticket</p>
         </button>
         <a
           href="https://t.me/rapiditosupport"
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-2xl p-4 text-center"
+          className="glass-card rounded-2xl p-4 text-center"
           style={{ backgroundColor: '#0088cc' }}
         >
           <span className="text-2xl">📱</span>
-          <p className="text-sm font-bold text-white mt-2">Telegram</p>
+          <p className="text-sm font-bold text-gray-900 mt-2">Telegram</p>
         </a>
       </div>
 
@@ -125,7 +125,7 @@ export default function PassengerSupport() {
       {/* FAQ List */}
       <div className="p-4 space-y-2">
         {filteredFAQ.map((item) => (
-          <div key={item.id} className="rounded-2xl overflow-hidden" style={{ backgroundColor: t.bgSecondary }}>
+          <div key={item.id} className="glass-card rounded-2xl overflow-hidden" style={{ backgroundColor: t.bgSecondary }}>
             <button
               onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
               className="w-full p-4 text-left flex items-center justify-between"
@@ -159,7 +159,7 @@ export default function PassengerSupport() {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="¿Qué pasó, chamo?"
-              className="w-full rounded-2xl px-4 py-3 text-sm mb-3"
+              className="w-full rounded-2xl px-4 py-3 text-sm mb-3 glass-input"
               style={{ backgroundColor: t.bgTertiary, color: t.text }}
             />
             
@@ -167,7 +167,7 @@ export default function PassengerSupport() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Cuéntanos más..."
-              className="w-full rounded-2xl px-4 py-3 text-sm mb-4"
+              className="w-full rounded-2xl px-4 py-3 text-sm mb-4 glass-input"
               style={{ backgroundColor: t.bgTertiary, color: t.text }}
               rows={4}
             />
@@ -175,7 +175,7 @@ export default function PassengerSupport() {
             <button
               onClick={submitTicket}
               disabled={sending || !subject || !message}
-              className="w-full rounded-2xl py-3 font-bold disabled:opacity-50"
+              className="w-full rounded-2xl py-3 font-bold disabled:opacity-50 glass-btn border-0 text-white"
               style={{ backgroundColor: t.accent, color: t.primaryText }}
             >
               {sending ? 'Enviando...' : 'Enviar Ticket'}

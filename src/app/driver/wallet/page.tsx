@@ -89,7 +89,7 @@ export default function DriverWalletPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 glassmorphism-bg-soft">
       <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
@@ -109,7 +109,7 @@ export default function DriverWalletPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Balance Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card>
+          <Card className="glass-card">
             <CardContent className="p-6">
               <p className="text-sm text-gray-500">Saldo Disponible</p>
               <p className="text-3xl font-bold text-green-600">
@@ -117,7 +117,7 @@ export default function DriverWalletPage() {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="glass-card">
             <CardContent className="p-6">
               <p className="text-sm text-gray-500">Ganancias Brutas</p>
               <p className="text-3xl font-bold text-gray-900">
@@ -125,7 +125,7 @@ export default function DriverWalletPage() {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="glass-card">
             <CardContent className="p-6">
               <p className="text-sm text-gray-500">Comisiones</p>
               <p className="text-3xl font-bold text-red-500">
@@ -133,7 +133,7 @@ export default function DriverWalletPage() {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="glass-card">
             <CardContent className="p-6">
               <p className="text-sm text-gray-500">Retirado</p>
               <p className="text-3xl font-bold text-primary">
@@ -144,7 +144,7 @@ export default function DriverWalletPage() {
         </div>
 
         {/* Withdraw Section */}
-        <Card className="mb-8">
+        <Card className="glass-card mb-8">
           <CardHeader>
             <CardTitle>💸 Solicitar Retiro</CardTitle>
           </CardHeader>
@@ -178,17 +178,19 @@ export default function DriverWalletPage() {
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 min="10"
                 step="0.01"
+                className="glass-input"
               />
               <Input
                 placeholder="Referencia o nota (opcional)"
                 value={withdrawNotes}
                 onChange={(e) => setWithdrawNotes(e.target.value)}
+                className="glass-input"
               />
               <Button
                 onClick={handleWithdraw}
                 isLoading={isWithdrawing}
                 disabled={!withdrawAmount || parseFloat(withdrawAmount) < 10 || !driverProfile?.payment?.bank}
-                className="w-full"
+                className="w-full glass-btn border-0 text-white"
               >
                 Solicitar Retiro
               </Button>
@@ -223,7 +225,7 @@ export default function DriverWalletPage() {
 
         {/* Tab Content */}
         {activeTab === 'transactions' && (
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Historial de Transacciones</CardTitle>
             </CardHeader>
@@ -260,7 +262,7 @@ export default function DriverWalletPage() {
         )}
 
         {activeTab === 'withdrawals' && (
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Historial de Retiros</CardTitle>
             </CardHeader>

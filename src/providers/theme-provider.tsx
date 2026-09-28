@@ -88,6 +88,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.style.setProperty('--accent-color', t.accent)
     document.documentElement.style.setProperty('--border-color', t.border)
     document.documentElement.style.setProperty('--shadow-color', t.shadow)
+    document.documentElement.classList.toggle('theme-dark', theme === 'dark')
   }, [theme])
 
   const setTheme = (newTheme: Theme) => {

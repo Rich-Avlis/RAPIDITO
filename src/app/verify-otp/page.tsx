@@ -65,8 +65,8 @@ export default function VerifyOtpPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-white to-primary/10">
-        <Card className="w-full max-w-md">
+      <div className="flex min-h-screen items-center justify-center glassmorphism-bg">
+        <Card className="w-full max-w-md glass-strong border-0">
           <CardContent className="p-8 text-center">
             <div className="text-6xl mb-4">✅</div>
             <h2 className="text-2xl font-bold text-gray-900">¡Verificado!</h2>
@@ -78,8 +78,8 @@ export default function VerifyOtpPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-white to-primary/10 px-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center glassmorphism-bg px-4">
+      <Card className="w-full max-w-md glass-strong border-0">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-3xl">
             📱
@@ -99,7 +99,7 @@ export default function VerifyOtpPage() {
               placeholder="000000"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="text-center text-2xl tracking-[0.5em]"
+              className="glass-input text-center text-2xl tracking-[0.5em]"
               maxLength={6}
             />
           </div>
@@ -109,7 +109,7 @@ export default function VerifyOtpPage() {
           )}
 
           <Button
-            className="w-full"
+            className="w-full glass-btn border-0"
             size="lg"
             onClick={handleVerify}
             isLoading={isLoading}

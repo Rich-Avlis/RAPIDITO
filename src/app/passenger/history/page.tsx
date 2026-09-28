@@ -79,7 +79,7 @@ export default function PassengerHistory() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: t.bg }}>
       {/* Header */}
-      <div className="p-4 flex items-center gap-4" style={{ backgroundColor: t.bgSecondary }}>
+      <div className="p-4 flex items-center gap-4 glass-header" style={{ backgroundColor: t.bgSecondary }}>
         <Link href="/passenger" className="p-2 rounded-xl" style={{ backgroundColor: t.bgTertiary }}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: t.text }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -115,7 +115,7 @@ export default function PassengerHistory() {
           </div>
         ) : (
           rides.map((ride) => (
-            <div key={ride.id} className="rounded-2xl p-4" style={{ backgroundColor: t.bgSecondary }}>
+            <div key={ride.id} className="glass-card rounded-2xl p-4" style={{ backgroundColor: t.bgSecondary }}>
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <p className="text-sm font-medium" style={{ color: t.text }}>{ride.originAddress}</p>

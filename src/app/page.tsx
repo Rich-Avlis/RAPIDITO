@@ -19,10 +19,10 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant="ghost">Iniciar Sesión</Button>
+              <Button variant="ghost" className="glass-card border-0">Iniciar Sesión</Button>
             </Link>
             <Link href="/register">
-              <Button className="shadow-lg shadow-[#FF6B00]/30 bg-[#FF6B00] hover:bg-[#E55D00]">Registrarse</Button>
+              <Button className="glass-btn border-0 text-white">Registrarse</Button>
             </Link>
           </div>
         </div>
@@ -30,7 +30,7 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <main className="flex-1">
-        <section className="relative overflow-hidden bg-gradient-to-br from-[#FF6B00]/5 via-white to-[#FF6B00]/10 py-20">
+        <section className="relative overflow-hidden glassmorphism-bg py-20">
           {/* FluidOrb decorations */}
           <div className="absolute -top-20 -right-20 opacity-40 pointer-events-none">
             <FluidOrb size={320} color="#FF6B00" />
@@ -38,6 +38,9 @@ export default function HomePage() {
           <div className="absolute -bottom-32 -left-32 opacity-25 pointer-events-none">
             <FluidOrb size={400} color="#E55D00" />
           </div>
+          {/* Glass blobs */}
+          <div className="glass-blob w-72 h-72 -left-20 top-1/3 bg-[#FF6B00]/30" />
+          <div className="glass-blob w-64 h-64 right-10 -bottom-16 bg-[#FDBA3C]/40" />
           {/* Decorative elements - Lara icons */}
           <div className="absolute top-10 left-10 text-6xl opacity-10 animate-float">
             <svg viewBox="0 0 100 200" className="w-16 h-32 text-[#FF6B00]">
@@ -78,28 +81,28 @@ export default function HomePage() {
                 </p>
                 <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
                   <Link href="/register?role=PASSENGER">
-                    <Button size="xl" className="w-full shadow-lg shadow-[#FF6B00]/30 bg-[#FF6B00] hover:bg-[#E55D00] sm:w-auto">
+                    <Button size="xl" className="w-full glass-btn border-0 text-white sm:w-auto">
                       🚗 Solicitar Viaje
                     </Button>
                   </Link>
                   <Link href="/register?role=DRIVER">
-                    <Button size="xl" variant="outline" className="w-full border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/5 sm:w-auto">
+                    <Button size="xl" className="w-full glass-card text-[#FF6B00] border-0 hover:bg-white/70 sm:w-auto">
                       🏍️ Ser Conductor
                     </Button>
                   </Link>
                 </div>
 
                 {/* Stats */}
-                <div className="mt-12 grid grid-cols-3 gap-6 text-center lg:text-left">
-                  <div>
+                <div className="mt-12 grid grid-cols-3 gap-4 text-center lg:text-left">
+                  <div className="glass-card rounded-2xl p-4">
                     <p className="text-3xl font-bold text-[#FF6B00]">100+</p>
                     <p className="text-sm text-gray-500">Viajes realizados</p>
                   </div>
-                  <div>
+                  <div className="glass-card rounded-2xl p-4">
                     <p className="text-3xl font-bold text-[#FF6B00]">50+</p>
                     <p className="text-sm text-gray-500">Conductores activos</p>
                   </div>
-                  <div>
+                  <div className="glass-card rounded-2xl p-4">
                     <p className="text-3xl font-bold text-[#FF6B00]">4.9</p>
                     <p className="text-sm text-gray-500">Calificación promedio</p>
                   </div>
@@ -176,8 +179,9 @@ export default function HomePage() {
         </section>
 
         {/* How it works */}
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-4">
+        <section className="py-20 glassmorphism-bg-soft relative overflow-hidden">
+          <div className="glass-blob w-80 h-80 -right-20 -top-20 bg-[#FF6B00]/20" />
+          <div className="container mx-auto px-4 relative z-10">
             <div className="mb-12 text-center">
               <h2 className="mb-4 text-3xl font-bold text-gray-900">
                 ¿Cómo funciona, chamo?
@@ -191,7 +195,7 @@ export default function HomePage() {
                 { step: '3', title: 'Negocia si quieres', desc: '¿No te cuadra el precio? ¡Haz tu oferta!', icon: '🤝', color: 'bg-yellow-100 text-yellow-600' },
                 { step: '4', title: '¡Pa\' la calle!', desc: 'Sigue al conductor en tiempo real y viaja seguro.', icon: '🏍️', color: 'bg-purple-100 text-purple-600' },
               ].map((item) => (
-                <div key={item.step} className="relative text-center">
+                <div key={item.step} className="glass-card rounded-2xl p-6 text-center relative">
                   <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${item.color} text-2xl`}>
                     {item.icon}
                   </div>
@@ -207,8 +211,10 @@ export default function HomePage() {
         </section>
 
         {/* Features */}
-        <section className="py-20 bg-gray-50">
-          <div className="container mx-auto px-4">
+        <section className="py-20 glassmorphism-bg relative overflow-hidden">
+          <div className="glass-blob w-96 h-96 -left-32 top-1/4 bg-[#FDBA3C]/30" />
+          <div className="glass-blob w-72 h-72 right-0 -bottom-20 bg-[#FF6B00]/25" />
+          <div className="container mx-auto px-4 relative z-10">
             <div className="mb-12 text-center">
               <h2 className="mb-4 text-3xl font-bold text-gray-900">
                 ¿Por qué RAPIDITO? ¡Épa!
@@ -248,8 +254,9 @@ export default function HomePage() {
         </section>
 
         {/* Lara Section */}
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-4">
+        <section className="py-20 glassmorphism-bg-soft relative overflow-hidden">
+          <div className="glass-blob w-80 h-80 right-10 -bottom-24 bg-[#FF6B00]/25" />
+          <div className="container mx-auto px-4 relative z-10">
             <div className="grid items-center gap-12 lg:grid-cols-2">
               <div className="text-center lg:text-left">
                 <h2 className="mb-6 text-3xl font-bold text-gray-900">
@@ -317,12 +324,12 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link href="/register?role=PASSENGER">
-                <Button size="xl" variant="secondary" className="w-full sm:w-auto">
+                <Button size="xl" className="w-full glass-card border-0 text-[#FF6B00] sm:w-auto">
                   🚗 Quiero viajar
                 </Button>
               </Link>
               <Link href="/register?role=DRIVER">
-                <Button size="xl" className="w-full bg-white text-[#FF6B00] hover:bg-gray-100 sm:w-auto">
+                <Button size="xl" className="w-full glass-card border-0 text-[#FF6B00] sm:w-auto">
                   🏍️ Quiero conducir
                 </Button>
               </Link>

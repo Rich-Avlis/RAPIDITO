@@ -109,7 +109,7 @@ export default function DriverProfile() {
   const photoMissing = !profile.photo
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 glassmorphism-bg-soft">
       <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export default function DriverProfile() {
         </div>
 
         {/* Personal Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
+        <div className="glass-card rounded-2xl p-6 mb-4">
           <h3 className="font-bold text-gray-900 mb-4">👤 Datos Personales</h3>
           <div className="space-y-4">
             <div>
@@ -198,7 +198,7 @@ export default function DriverProfile() {
                 value={profile.firstName}
                 onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input"
               />
             </div>
             <div>
@@ -208,7 +208,7 @@ export default function DriverProfile() {
                 value={profile.lastName}
                 onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input"
               />
             </div>
             <div>
@@ -218,14 +218,14 @@ export default function DriverProfile() {
                 value={profile.email}
                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input"
               />
             </div>
           </div>
         </div>
 
         {/* License Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
+        <div className="glass-card rounded-2xl p-6 mb-4">
           <h3 className="font-bold text-gray-900 mb-4">🪪 Licencia de Conducir</h3>
           <div className="space-y-4">
             <div>
@@ -236,7 +236,7 @@ export default function DriverProfile() {
                 onChange={(e) => setProfile({ ...profile, license: { ...profile.license, number: e.target.value.toUpperCase() } })}
                 disabled={!isEditing}
                 placeholder="Ej: 12345678"
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 font-bold"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input font-bold"
               />
             </div>
             <div>
@@ -246,7 +246,7 @@ export default function DriverProfile() {
                 value={profile.license.expiry}
                 onChange={(e) => setProfile({ ...profile, license: { ...profile.license, expiry: e.target.value } })}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input"
               />
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function DriverProfile() {
         </div>
 
         {/* Payment Info - Pago Móvil */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
+        <div className="glass-card rounded-2xl p-6 mb-4">
           <h3 className="font-bold text-gray-900 mb-4">💳 Datos de Pago Móvil</h3>
           <div className="bg-orange-50 rounded-xl p-3 mb-4">
             <p className="text-xs text-orange-700">
@@ -270,7 +270,7 @@ export default function DriverProfile() {
                 value={profile.payment.bank}
                 onChange={(e) => setProfile({ ...profile, payment: { ...profile.payment, bank: e.target.value } })}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input"
               >
                 <option value="">Selecciona tu banco</option>
                 <option value="0102">Banco 0102 - Banco de Venezuela</option>
@@ -323,7 +323,7 @@ export default function DriverProfile() {
                   onChange={(e) => setProfile({ ...profile, payment: { ...profile.payment, phone: e.target.value.replace(/\D/g, '').slice(0, 10) } })}
                   disabled={!isEditing}
                   placeholder="04121234567"
-                  className="flex-1 rounded-r-xl border border-gray-200 px-4 py-2 text-sm disabled:bg-gray-50"
+                  className="flex-1 rounded-r-xl border border-gray-200 px-4 py-2 text-sm disabled:bg-gray-50 glass-input"
                 />
               </div>
             </div>
@@ -335,7 +335,7 @@ export default function DriverProfile() {
                 onChange={(e) => setProfile({ ...profile, payment: { ...profile.payment, cedula: e.target.value } })}
                 disabled={!isEditing}
                 placeholder="Ej: 29673250"
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input"
               />
             </div>
             <div>
@@ -346,7 +346,7 @@ export default function DriverProfile() {
                 onChange={(e) => setProfile({ ...profile, payment: { ...profile.payment, name: e.target.value } })}
                 disabled={!isEditing}
                 placeholder="Nombre y apellido"
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm disabled:bg-gray-50 glass-input"
               />
             </div>
           </div>
@@ -356,7 +356,7 @@ export default function DriverProfile() {
         </div>
 
         {/* Vehicle Info - Read Only */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
+        <div className="glass-card rounded-2xl p-6 mb-4">
           <h3 className="font-bold text-gray-900 mb-4">🏍️ Datos del Vehículo</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -397,7 +397,7 @@ export default function DriverProfile() {
           <button
             onClick={saveProfile}
             disabled={saving || photoMissing}
-            className="w-full py-3 bg-[#FF6B00] text-white font-bold rounded-2xl disabled:opacity-50"
+            className="w-full py-3 bg-[#FF6B00] text-white font-bold rounded-2xl disabled:opacity-50 glass-btn border-0"
           >
             {saving ? 'Guardando...' : photoMissing ? 'Sube tu foto primero' : 'Guardar cambios'}
           </button>

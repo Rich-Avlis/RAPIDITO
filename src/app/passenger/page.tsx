@@ -598,7 +598,7 @@ export default function PassengerDashboard() {
         <div className="fixed inset-0 z-[1100]" onClick={() => setSidebarOpen(false)}>
           <div className="absolute inset-0 bg-black/50" />
           <div
-            className="absolute left-0 top-0 h-full w-80 shadow-xl"
+            className="absolute left-0 top-0 h-full w-80 glass-strong"
             style={{ backgroundColor: t.accent, color: t.text }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -687,7 +687,7 @@ export default function PassengerDashboard() {
       )}
 
       {/* Top Bar */}
-      <div className="relative z-[1000] shadow-sm" style={{ backgroundColor: t.bgSecondary }}>
+      <div className="relative z-[1000] glass-header" style={{ backgroundColor: t.bgSecondary }}>
         <div className="flex items-center gap-3 p-4">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -788,7 +788,7 @@ export default function PassengerDashboard() {
         {panelView === 'search' && (
           <div>
             {/* Header with back button */}
-            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+            <div className="flex items-center gap-3 p-4 border-b glass-header" style={{ borderColor: t.border }}>
               <button
                 onClick={() => {
                   setPanelView('home')
@@ -808,7 +808,7 @@ export default function PassengerDashboard() {
 
             <div className="p-5 space-y-4">
               {/* Origin */}
-              <div className="flex items-center gap-3 rounded-2xl p-4" style={{ backgroundColor: t.bgTertiary }}>
+              <div className="flex items-center gap-3 rounded-2xl p-4 glass-input" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="w-3 h-3 rounded-full bg-black" />
                 <div className="flex-1">
                   <p className="text-xs mb-1" style={{ color: t.textSecondary }}>Origen</p>
@@ -825,7 +825,7 @@ export default function PassengerDashboard() {
               </div>
 
               {/* Destination Input */}
-              <div className="rounded-2xl p-4" style={{ backgroundColor: t.bgTertiary }}>
+              <div className="rounded-2xl p-4 glass-input" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.primary }} />
                   <input
@@ -868,7 +868,7 @@ export default function PassengerDashboard() {
                       <button
                         key={index}
                         onClick={() => handleSelectSuggestion(suggestion)}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors hover:opacity-80"
+                        className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors hover:opacity-80 glass-card"
                         style={{ backgroundColor: t.bgSecondary }}
                       >
                         <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${t.primary}20` }}>
@@ -942,7 +942,7 @@ export default function PassengerDashboard() {
                     <button
                       key={index}
                       onClick={() => handleSelectFromHistory(place)}
-                      className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-colors hover:opacity-80"
+                      className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-colors hover:opacity-80 glass-card"
                       style={{ backgroundColor: t.bgTertiary }}
                     >
                       <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: t.border }}>
@@ -990,7 +990,7 @@ export default function PassengerDashboard() {
         {panelView === 'vehicles' && (
           <div>
             {/* Header with back button */}
-            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+            <div className="flex items-center gap-3 p-4 border-b glass-header" style={{ borderColor: t.border }}>
               <button
                 onClick={() => setPanelView('search')}
                 className="p-2 rounded-xl hover:opacity-80"
@@ -1005,7 +1005,7 @@ export default function PassengerDashboard() {
 
             {/* Origin/Destination Bar */}
             <div className="p-4 border-b" style={{ borderColor: t.border }}>
-              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: t.bgTertiary }}>
+              <div className="rounded-2xl overflow-hidden glass-card" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="flex items-center gap-3 p-3">
                   <div className="w-3 h-3 rounded-full bg-black" />
                   <p className="text-sm truncate flex-1" style={{ color: t.text }}>{origin?.name || 'Origen'}</p>
@@ -1101,7 +1101,7 @@ export default function PassengerDashboard() {
                       }
                       setPanelView('vehicleDetail')
                     }}
-                    className="min-w-[160px] rounded-2xl p-5 text-left border-2 border-transparent transition-all"
+                    className="min-w-[160px] rounded-2xl p-5 text-left glass-card transition-all"
                     style={{ backgroundColor: t.bgTertiary }}
                   >
                     {discount > 0 && (
@@ -1159,7 +1159,7 @@ export default function PassengerDashboard() {
         {panelView === 'vehicleDetail' && selectedVehicle && (
           <div>
             {/* Header with back button */}
-            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+            <div className="flex items-center gap-3 p-4 border-b glass-header" style={{ borderColor: t.border }}>
               <button
                 onClick={() => setPanelView('vehicles')}
                 className="p-2 rounded-xl hover:opacity-80"
@@ -1198,7 +1198,7 @@ export default function PassengerDashboard() {
               {/* Service Options */}
               <div className="space-y-3 mt-6">
                 {/* Servicio Rápido */}
-                <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: t.bgTertiary }}>
+                <div className="rounded-2xl p-4 flex items-center justify-between glass-card" style={{ backgroundColor: t.bgTertiary }}>
                   <div>
                     <p className="font-bold" style={{ color: t.text }}>Servicio Rápido</p>
                     <p className="text-sm" style={{ color: t.textSecondary }}>Llegada más rápida</p>
@@ -1219,7 +1219,7 @@ export default function PassengerDashboard() {
                 </div>
 
                 {/* Servicio Normal */}
-                <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: t.bgTertiary }}>
+                <div className="rounded-2xl p-4 flex items-center justify-between glass-card" style={{ backgroundColor: t.bgTertiary }}>
                   <div>
                     <p className="font-bold" style={{ color: t.text }}>Servicio Normal</p>
                     <p className="text-sm" style={{ color: t.textSecondary }}>Precio establecido</p>
@@ -1244,7 +1244,7 @@ export default function PassengerDashboard() {
                 </div>
 
                 {/* Selecciona cuánto quieres pagar */}
-                <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: t.bgTertiary }}>
+                <div className="rounded-2xl p-4 flex items-center justify-between glass-card" style={{ backgroundColor: t.bgTertiary }}>
                   <div>
                     <p className="font-bold" style={{ color: t.text }}>Selecciona cuánto quieres pagar</p>
                     <p className="text-sm" style={{ color: t.textSecondary }}>Elige tú el precio</p>
@@ -1281,7 +1281,7 @@ export default function PassengerDashboard() {
         {panelView === 'ride' && rideEstimate && (
           <div>
             {/* Header with back button */}
-            <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: t.border }}>
+            <div className="flex items-center gap-3 p-4 border-b glass-header" style={{ borderColor: t.border }}>
               <button
                 onClick={() => setPanelView('vehicleDetail')}
                 className="p-2 rounded-xl hover:opacity-80"
@@ -1317,7 +1317,7 @@ export default function PassengerDashboard() {
               </div>
 
               {/* Price Selection */}
-              <div className="rounded-2xl p-5" style={{ backgroundColor: t.bgTertiary }}>
+              <div className="rounded-2xl p-5 glass-card" style={{ backgroundColor: t.bgTertiary }}>
                 <div className="flex items-center justify-center gap-4 mb-4">
                   <span className="border px-5 py-2 rounded-2xl font-bold text-lg" style={{ backgroundColor: t.bgSecondary, borderColor: t.border, color: t.text }}>
                     Tarifa Recomendada
@@ -1363,7 +1363,7 @@ export default function PassengerDashboard() {
       {/* Promo Code Modal */}
       {promoModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setPromoModalOpen(false)}>
-          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-t-3xl p-6 glass-strong" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
             <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Agregar código de descuento</h3>
             
@@ -1373,7 +1373,7 @@ export default function PassengerDashboard() {
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 placeholder="Escribe tu código"
-                className="flex-1 rounded-2xl px-4 py-3 text-sm"
+                className="flex-1 rounded-2xl px-4 py-3 text-sm glass-input"
                 style={{ backgroundColor: t.bgTertiary, color: t.text }}
               />
               <button
@@ -1400,7 +1400,7 @@ export default function PassengerDashboard() {
       {/* Referral Modal */}
       {showReferralModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowReferralModal(false)}>
-          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-t-3xl p-6 glass-strong" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
             <h3 className="text-xl font-bold mb-2" style={{ color: t.text }}>Comparte y gana</h3>
             <p className="text-sm mb-4" style={{ color: t.textSecondary }}>Invita a amigos y ambos ganan 10% de descuento en 2 viajes</p>
@@ -1451,7 +1451,7 @@ export default function PassengerDashboard() {
       {/* Rating Modal */}
       {showRatingModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]" onClick={() => setShowRatingModal(false)}>
-          <div className="w-full max-w-md rounded-3xl p-6 mx-4" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-3xl p-6 mx-4 glass-strong" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4 text-center" style={{ color: t.text }}>Califica tu viaje</h3>
             
             <div className="flex justify-center gap-2 mb-4">
@@ -1466,7 +1466,7 @@ export default function PassengerDashboard() {
               value={ratingComment}
               onChange={(e) => setRatingComment(e.target.value)}
               placeholder="Comentario opcional..."
-              className="w-full rounded-2xl px-4 py-3 text-sm mb-4"
+              className="w-full rounded-2xl px-4 py-3 text-sm mb-4 glass-input"
               style={{ backgroundColor: t.bgTertiary, color: t.text }}
               rows={3}
             />
@@ -1485,7 +1485,7 @@ export default function PassengerDashboard() {
       {/* Wallet Modal */}
       {showWalletModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowWalletModal(false)}>
-          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-t-3xl p-6 glass-strong" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
             <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Mi Cartera</h3>
             
@@ -1518,7 +1518,7 @@ export default function PassengerDashboard() {
       {/* Scheduled Ride Modal */}
       {showScheduledModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowScheduledModal(false)}>
-          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-t-3xl p-6 glass-card" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
             <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>Programar viaje</h3>
             
@@ -1529,7 +1529,7 @@ export default function PassengerDashboard() {
                   type="date"
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
-                  className="w-full rounded-2xl px-4 py-3 text-sm"
+                  className="w-full rounded-2xl px-4 py-3 text-sm glass-input"
                   style={{ backgroundColor: t.bgTertiary, color: t.text }}
                   min={new Date().toISOString().split('T')[0]}
                 />
@@ -1540,7 +1540,7 @@ export default function PassengerDashboard() {
                   type="time"
                   value={scheduledTime}
                   onChange={(e) => setScheduledTime(e.target.value)}
-                  className="w-full rounded-2xl px-4 py-3 text-sm"
+                  className="w-full rounded-2xl px-4 py-3 text-sm glass-input"
                   style={{ backgroundColor: t.bgTertiary, color: t.text }}
                 />
               </div>
@@ -1551,7 +1551,7 @@ export default function PassengerDashboard() {
                   value={scheduledNotes}
                   onChange={(e) => setScheduledNotes(e.target.value)}
                   placeholder="Ej: Near the park..."
-                  className="w-full rounded-2xl px-4 py-3 text-sm"
+                  className="w-full rounded-2xl px-4 py-3 text-sm glass-input"
                   style={{ backgroundColor: t.bgTertiary, color: t.text }}
                 />
               </div>
@@ -1581,7 +1581,7 @@ export default function PassengerDashboard() {
       {/* Payment Method Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowPaymentModal(false)}>
-          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-t-3xl p-6 glass-strong" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
             <h3 className="text-xl font-bold mb-4" style={{ color: t.text }}>¿Cómo vas a pagar?</h3>
             
@@ -1594,7 +1594,7 @@ export default function PassengerDashboard() {
                 <button
                   key={method.id}
                   onClick={() => { setPaymentMethod(method.id); setShowPaymentModal(false) }}
-                  className={`w-full rounded-2xl p-4 flex items-center gap-3 ${paymentMethod === method.id ? 'ring-2' : ''}`}
+                  className={`w-full rounded-2xl p-4 flex items-center gap-3 glass-card ${paymentMethod === method.id ? 'ring-2' : ''}`}
                   style={{ backgroundColor: t.bgTertiary }}
                 >
                   <span className="text-2xl">{method.icon}</span>
@@ -1617,7 +1617,7 @@ export default function PassengerDashboard() {
       {/* Tip Modal */}
       {showTipModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowTipModal(false)}>
-          <div className="w-full max-w-md rounded-t-3xl p-6" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-t-3xl p-6 glass-strong" style={{ backgroundColor: t.bgSecondary }} onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: t.border }} />
             <h3 className="text-xl font-bold mb-2 text-center" style={{ color: t.text }}>Propina para el conductor</h3>
             <p className="text-sm text-center mb-4" style={{ color: t.textSecondary }}>Muestra tu agradecimiento</p>
@@ -1627,7 +1627,7 @@ export default function PassengerDashboard() {
                 <button
                   key={amount}
                   onClick={() => setTipAmount(amount)}
-                  className={`w-16 h-16 rounded-2xl font-bold text-lg ${tipAmount === amount ? 'ring-2' : ''}`}
+                  className={`w-16 h-16 rounded-2xl font-bold text-lg glass-card ${tipAmount === amount ? 'ring-2' : ''}`}
                   style={{ backgroundColor: tipAmount === amount ? t.primary : t.bgTertiary, color: tipAmount === amount ? 'white' : t.text }}
                 >
                   ${amount}
@@ -1659,7 +1659,7 @@ export default function PassengerDashboard() {
       {/* Chat Modal */}
       {showChatModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[2000]" onClick={() => setShowChatModal(false)}>
-          <div className="w-full max-w-md rounded-t-3xl flex flex-col" style={{ backgroundColor: t.bgSecondary, height: '70vh' }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-t-3xl flex flex-col glass-card" style={{ backgroundColor: t.bgSecondary, height: '70vh' }} onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: t.border }}>
               <h3 className="font-bold" style={{ color: t.text }}>Chat con conductor</h3>
               <button onClick={() => setShowChatModal(false)}>
@@ -1692,7 +1692,7 @@ export default function PassengerDashboard() {
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                 placeholder="Escribe un mensaje..."
-                className="flex-1 rounded-2xl px-4 py-2 text-sm"
+                className="flex-1 rounded-2xl px-4 py-2 text-sm glass-input"
                 style={{ backgroundColor: t.bgTertiary, color: t.text }}
               />
               <button

@@ -206,7 +206,7 @@ export default function LoginPage() {
       </div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-b from-white/80 via-white/60 to-white/80" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-white/40 via-white/25 to-white/45 backdrop-blur-[2px]" />
 
       {/* Login Card */}
       <div className="relative z-20 w-full max-w-md mx-4">

@@ -108,7 +108,7 @@ export default function PassengerTutorial() {
       <main className="container mx-auto px-4 py-6 max-w-lg">
         {/* Tutorial Mode */}
         {!showAll && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+          <div className="glass-card rounded-2xl p-6 mb-6">
             <div className="text-center mb-6">
               <div className="text-6xl mb-4">{tutorialSteps[currentStep].icon}</div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -158,7 +158,7 @@ export default function PassengerTutorial() {
                     setShowAll(true)
                   }
                 }}
-                className="flex-1 py-3 bg-[#FF6B00] text-white rounded-2xl font-bold"
+                className="flex-1 py-3 glass-btn text-white rounded-2xl font-bold"
               >
                 {currentStep < tutorialSteps.length - 1 ? 'Siguiente' : '¡Entendido!'}
               </button>
@@ -176,7 +176,7 @@ export default function PassengerTutorial() {
 
             <div className="space-y-4">
               {tutorialSteps.map((step) => (
-                <div key={step.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                <div key={step.id} className="glass-card rounded-2xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="text-3xl">{step.icon}</div>
                     <div className="flex-1">
@@ -198,7 +198,7 @@ export default function PassengerTutorial() {
 
             <div className="mt-6 space-y-3">
               <Link href="/passenger">
-                <button className="w-full py-3 bg-[#FF6B00] text-white font-bold rounded-2xl">
+                <button className="w-full py-3 glass-btn text-white font-bold rounded-2xl">
                   ¡Ir al mapa!
                 </button>
               </Link>

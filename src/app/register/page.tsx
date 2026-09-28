@@ -117,11 +117,13 @@ function RegisterForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-white to-primary/10 px-4 py-12">
-      <div className="fixed top-20 left-10 text-6xl opacity-5">🏍️</div>
-      <div className="fixed bottom-20 right-10 text-5xl opacity-5">🚗</div>
+    <div className="relative flex min-h-screen items-center justify-center glassmorphism-bg px-4 py-12 overflow-hidden">
+      <div className="glass-blob w-96 h-96 -left-24 -top-24 bg-[#FF6B00]/30" />
+      <div className="glass-blob w-80 h-80 -right-20 -bottom-20 bg-[#FDBA3C]/40" />
+      <div className="fixed top-20 left-10 text-6xl opacity-5 z-10">🏍️</div>
+      <div className="fixed bottom-20 right-10 text-5xl opacity-5 z-10">🚗</div>
 
-      <Card className="w-full max-w-md shadow-xl">
+      <Card className="relative z-10 w-full max-w-md glass-strong border-0">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white font-bold text-2xl shadow-lg shadow-primary/30">
             R
@@ -177,13 +179,13 @@ function RegisterForm() {
             <div className="space-y-1">
               <label className="text-sm font-medium text-gray-700">Teléfono</label>
               <div className="flex gap-2">
-                <div className="flex items-center rounded-lg border border-gray-300 bg-gray-50 px-3 text-sm text-gray-600">
+                <div className="flex items-center rounded-lg glass-subtle border border-white/50 px-3 text-sm text-gray-600">
                   +58
                 </div>
                 <select
                   value={formData.phoneCode}
                   onChange={inputChange('phoneCode')}
-                  className="h-10 w-20 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="h-10 w-20 rounded-lg glass-input border border-white/50 px-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   {PHONE_CODES.map((code) => (
                     <option key={code} value={code}>{code}</option>
@@ -246,7 +248,7 @@ function RegisterForm() {
                     <select
                       value={formData.vehicleType}
                       onChange={inputChange('vehicleType')}
-                      className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="flex h-10 w-full rounded-lg glass-input border border-white/50 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     >
                       <option value="moto">🏍️ Moto</option>
                       <option value="car">🚗 Automóvil</option>
@@ -308,7 +310,7 @@ function RegisterForm() {
 
             <Button
               type="submit"
-              className="w-full shadow-lg shadow-primary/30"
+              className="w-full glass-btn border-0"
               size="lg"
               isLoading={isLoading}
             >

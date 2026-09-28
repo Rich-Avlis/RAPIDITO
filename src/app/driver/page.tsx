@@ -107,7 +107,7 @@ export default function DriverDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 glassmorphism-bg-soft">
       {/* Header */}
       <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -195,27 +195,27 @@ export default function DriverDashboard() {
             <Card className="glass-card border-0">
               <CardContent className="p-4 space-y-2">
                 <Link href="/driver/profile">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
                     👤 Mi Perfil y Moto
                   </Button>
                 </Link>
                 <Link href="/driver/documents">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
                     📄 Mi Documentación
                   </Button>
                 </Link>
                 <Link href="/driver/wallet">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
                     💰 Mi Cartera
                   </Button>
                 </Link>
                 <Link href="/driver/history">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
                     📊 Historial
                   </Button>
                 </Link>
                 <Link href="/driver/faq">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
                     📚 Tutorial y Ayuda
                   </Button>
                 </Link>
@@ -225,7 +225,7 @@ export default function DriverDashboard() {
 
           {/* Map Area */}
           <div className="lg:col-span-2">
-            <Card className="h-[500px] lg:h-[600px] overflow-hidden">
+            <Card className="glass-card h-[500px] lg:h-[600px] overflow-hidden">
               <MapView
                 center={currentLocation ? [currentLocation.lat, currentLocation.lng] : undefined}
                 markers={currentLocation ? [{
@@ -246,7 +246,7 @@ export default function DriverDashboard() {
                 </h2>
                 <div className="space-y-4">
                   {rideRequests.map((request) => (
-                    <Card key={request.id} className="border-primary">
+                    <Card key={request.id} className="glass-card border-primary">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div>

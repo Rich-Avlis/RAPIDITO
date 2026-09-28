@@ -136,7 +136,7 @@ export default function CompleteDriverProfile() {
 
         {/* Step: Vehicle Details */}
         {step === 'vehicle' && (
-          <Card className="shadow-lg">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>🏍️ Datos del Vehículo</CardTitle>
               <CardDescription>Completa la información de tu vehículo</CardDescription>
@@ -147,7 +147,7 @@ export default function CompleteDriverProfile() {
                 <select
                   value={vehicle.type}
                   onChange={(e) => setVehicle({ ...vehicle, type: e.target.value })}
-                  className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                  className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm glass-input"
                 >
                   <option value="moto">🏍️ Moto</option>
                   <option value="car">🚗 Automóvil</option>
@@ -155,18 +155,18 @@ export default function CompleteDriverProfile() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Marca" placeholder="Honda" value={vehicle.brand} onChange={(e) => setVehicle({ ...vehicle, brand: e.target.value })} />
-                <Input label="Modelo" placeholder="XR 150" value={vehicle.model} onChange={(e) => setVehicle({ ...vehicle, model: e.target.value })} />
+                <Input label="Marca" placeholder="Honda" value={vehicle.brand} onChange={(e) => setVehicle({ ...vehicle, brand: e.target.value })} className="glass-input" />
+                <Input label="Modelo" placeholder="XR 150" value={vehicle.model} onChange={(e) => setVehicle({ ...vehicle, model: e.target.value })} className="glass-input" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Color" placeholder="Negro" value={vehicle.color} onChange={(e) => setVehicle({ ...vehicle, color: e.target.value })} />
-                <Input label="Placa" placeholder="ABC123" value={vehicle.plateNumber} onChange={(e) => setVehicle({ ...vehicle, plateNumber: e.target.value.toUpperCase() })} />
+                <Input label="Color" placeholder="Negro" value={vehicle.color} onChange={(e) => setVehicle({ ...vehicle, color: e.target.value })} className="glass-input" />
+                <Input label="Placa" placeholder="ABC123" value={vehicle.plateNumber} onChange={(e) => setVehicle({ ...vehicle, plateNumber: e.target.value.toUpperCase() })} className="glass-input" />
               </div>
 
-              <Input label="Año" type="number" placeholder="2020" value={vehicle.year} onChange={(e) => setVehicle({ ...vehicle, year: e.target.value })} />
+              <Input label="Año" type="number" placeholder="2020" value={vehicle.year} onChange={(e) => setVehicle({ ...vehicle, year: e.target.value })} className="glass-input" />
 
-              <Button className="w-full shadow-lg shadow-primary/30" size="lg" onClick={handleVehicleSubmit} isLoading={isSaving}>
+              <Button className="w-full glass-btn border-0 text-white" size="lg" onClick={handleVehicleSubmit} isLoading={isSaving}>
                 Continuar a Documentos →
               </Button>
             </CardContent>
@@ -175,7 +175,7 @@ export default function CompleteDriverProfile() {
 
         {/* Step: Document Upload */}
         {step === 'documents' && (
-          <Card className="shadow-lg">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>📄 {currentDoc.name}</CardTitle>
               <CardDescription>
@@ -219,7 +219,7 @@ export default function CompleteDriverProfile() {
               />
 
               {!currentDoc.preview ? (
-                <Button className="w-full" size="lg" onClick={() => fileInputRef.current?.click()}>
+                <Button className="w-full glass-btn border-0 text-white" size="lg" onClick={() => fileInputRef.current?.click()}>
                   📷 Tomar Fotografía
                 </Button>
               ) : (
@@ -230,10 +230,10 @@ export default function CompleteDriverProfile() {
                     </div>
                   ) : (
                     <>
-                      <Button className="w-full" size="lg" onClick={handleUploadDocument} isLoading={isSaving}>
+                      <Button className="w-full glass-btn border-0 text-white" size="lg" onClick={handleUploadDocument} isLoading={isSaving}>
                         Enviar Documento
                       </Button>
-                      <Button variant="outline" className="w-full" onClick={() => {
+                      <Button variant="outline" className="w-full glass-card border-0" onClick={() => {
                         const updatedDocs = [...documents]
                         updatedDocs[currentDocIndex].preview = null
                         updatedDocs[currentDocIndex].file = null
@@ -264,7 +264,7 @@ export default function CompleteDriverProfile() {
 
         {/* Step: Done */}
         {step === 'done' && (
-          <Card className="shadow-lg">
+          <Card className="glass-card">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 text-6xl">🎉</div>
               <CardTitle>¡Perfil Completado!</CardTitle>
@@ -285,7 +285,7 @@ export default function CompleteDriverProfile() {
                 </ul>
               </div>
 
-              <Button className="w-full shadow-lg shadow-primary/30" size="lg" onClick={() => router.push('/driver')}>
+              <Button className="w-full glass-btn border-0 text-white" size="lg" onClick={() => router.push('/driver')}>
                 Ir al Panel del Conductor →
               </Button>
             </CardContent>

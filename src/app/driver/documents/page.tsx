@@ -215,7 +215,7 @@ export default function DocumentCapturePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 glassmorphism-bg-soft">
       <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
@@ -253,7 +253,7 @@ export default function DocumentCapturePage() {
                     .map((doc) => (
                       <Card
                         key={doc.id}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        className="cursor-pointer hover:shadow-md transition-shadow glass-card"
                         onClick={() => handleCapture(doc)}
                       >
                         <CardContent className="p-4">
@@ -276,12 +276,12 @@ export default function DocumentCapturePage() {
             <Button
               variant="ghost"
               onClick={() => setSelectedDoc(null)}
-              className="mb-4"
+              className="mb-4 glass-card border-0"
             >
               ← Volver
             </Button>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-center">
                   {selectedDoc.icon} {selectedDoc.name}
@@ -341,7 +341,7 @@ export default function DocumentCapturePage() {
 
                 {!capturedImage ? (
                   <Button
-                    className="w-full"
+                    className="w-full glass-btn border-0 text-white"
                     size="lg"
                     onClick={() => fileInputRef.current?.click()}
                   >
@@ -357,7 +357,7 @@ export default function DocumentCapturePage() {
                     ) : (
                       <>
                         <Button
-                          className="w-full"
+                          className="w-full glass-btn border-0 text-white"
                           size="lg"
                           onClick={handleUpload}
                           isLoading={isUploading}
@@ -366,7 +366,7 @@ export default function DocumentCapturePage() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full"
+                          className="w-full glass-card border-0"
                           onClick={() => setCapturedImage(null)}
                         >
                           Tomar Nuevamente

@@ -90,7 +90,7 @@ export default function DriverFAQ() {
   const [showAll, setShowAll] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 glassmorphism-bg-soft">
       <header className="sticky top-0 z-50 glass-header">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export default function DriverFAQ() {
       <main className="container mx-auto px-4 py-6 max-w-lg">
         {/* Tutorial Mode */}
         {!showAll && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+          <div className="glass-card rounded-2xl p-6 mb-6">
             <div className="text-center mb-6">
               <div className="text-6xl mb-4">{tutorialSteps[currentStep].icon}</div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -157,7 +157,7 @@ export default function DriverFAQ() {
                     setShowAll(true)
                   }
                 }}
-                className="flex-1 py-3 bg-[#FF6B00] text-white rounded-2xl font-bold"
+                className="flex-1 py-3 bg-[#FF6B00] text-white rounded-2xl font-bold glass-btn border-0"
               >
                 {currentStep < tutorialSteps.length - 1 ? 'Siguiente' : '¡Entendido!'}
               </button>
@@ -175,7 +175,7 @@ export default function DriverFAQ() {
 
             <div className="space-y-4">
               {tutorialSteps.map((step) => (
-                <div key={step.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                <div key={step.id} className="glass-card rounded-2xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="text-3xl">{step.icon}</div>
                     <div className="flex-1">
@@ -197,7 +197,7 @@ export default function DriverFAQ() {
 
             <div className="mt-6 space-y-3">
               <Link href="/driver">
-                <button className="w-full py-3 bg-[#FF6B00] text-white font-bold rounded-2xl">
+                <button className="w-full py-3 bg-[#FF6B00] text-white font-bold rounded-2xl glass-btn border-0">
                   ¡Empezar a conducir!
                 </button>
               </Link>
@@ -222,7 +222,7 @@ export default function DriverFAQ() {
               { q: '¿Necesito seguro del vehículo?', a: 'Sí, es obligatorio tener SOAT vigente. Sube la foto en Documentación.' },
               { q: '¿Puedo rechazar viajes?', a: 'Sí, puedes rechazar. Pero no abuses porque afecta tu calificación.' },
             ].map((item, idx) => (
-              <details key={idx} className="bg-white rounded-2xl p-4 shadow-sm">
+              <details key={idx} className="glass-card rounded-2xl p-4">
                 <summary className="font-medium text-gray-900 cursor-pointer">{item.q}</summary>
                 <p className="text-sm text-gray-600 mt-2">{item.a}</p>
               </details>
