@@ -210,22 +210,7 @@ export default function HomePage() {
                       <div>
                         <p className="font-semibold text-gray-900">Viaje completado</p>
                         <p className="text-sm text-gray-500">Plaza Bolívar</p>
-                        <p className="text-lg font-bold text-[#FF6B00]">$1.50</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* La Tinaja de Quíbor */}
-                  <div className="absolute -right-5 top-20 rounded-2xl glass-card p-3">
-                    <div className="flex items-center gap-2">
-                      <svg viewBox="0 0 80 60" className="w-12 h-10 text-[#FF6B00]">
-                        <ellipse cx="40" cy="30" rx="35" ry="25" fill="currentColor" opacity="0.3"/>
-                        <ellipse cx="55" cy="25" rx="20" ry="15" fill="currentColor" opacity="0.4"/>
-                        <ellipse cx="25" cy="35" rx="15" ry="10" fill="currentColor" opacity="0.35"/>
-                      </svg>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-900">La Tinaja</p>
-                        <p className="text-[10px] text-gray-500">Quíbor, Lara</p>
+                        <p className="text-lg font-bold text-[#FF6B00]">$1.00</p>
                       </div>
                     </div>
                   </div>
