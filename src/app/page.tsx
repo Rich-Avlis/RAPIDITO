@@ -349,15 +349,18 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF6B00] text-white font-bold text-sm">
-                R
-              </div>
+              <Image
+                src="/logo-r.png"
+                alt="R RAPIDITO"
+                width={40}
+                height={27}
+                className="h-7 w-auto drop-shadow-sm"
+              />
               <span className="font-bold text-gray-900">RAPIDITO</span>
-              <span className="text-sm text-gray-500">100% GUARO 🇻🇪</span>
             </div>
-            
+
             <p className="text-sm text-gray-500">
-              &copy; 2026 RAPIDITO. Quíbor, Estado Lara, Venezuela.{' '}
+              &copy; 2026 RAPIDITO. Lara, Venezuela.{' '}
               <span className="text-[#FF6B00] font-semibold">100% GUARO</span>
             </p>
 
