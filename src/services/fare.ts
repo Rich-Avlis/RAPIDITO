@@ -258,9 +258,9 @@ const CITY_CENTERS: Record<string, Coordinates> = {
   tocuyo: { lat: 9.7833, lng: -69.2667 },
 }
 
-// Recargo nocturno: 8pm–4am (definido por tarifas locales)
+// Recargo nocturno: 8pm–4am hora de Venezuela (America/Caracas, UTC-4 sin DST)
 export function isNightTime(now: Date = new Date()): boolean {
-  const hour = now.getHours()
+  const hour = (now.getUTCHours() - 4 + 24) % 24 // hora de Caracas
   return hour >= 20 || hour < 4
 }
 
