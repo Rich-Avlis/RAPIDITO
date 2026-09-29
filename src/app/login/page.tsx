@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/providers/auth-provider'
 import FluidOrb from '@/components/ui/fluid-orb'
@@ -213,10 +214,7 @@ export default function LoginPage() {
         <div className="glass-strong rounded-3xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FF6B00] text-white font-bold text-3xl shadow-lg shadow-[#FF6B00]/30">
-              R
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">RAPIDITO</h1>
+            <Image src="/logo-r.png" alt="RAPIDITO" width={118} height={80} priority className="mx-auto mb-4 h-20 w-auto" />
             <p className="text-[#FF6B00] font-medium mt-1">Pa' donde vas</p>
           </div>
 

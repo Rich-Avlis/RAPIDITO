@@ -267,8 +267,10 @@ export default function HomePage() {
           <div className="glass-blob w-72 h-72 right-0 -bottom-20 bg-[#FF6B00]/25" />
           <div className="container mx-auto px-4 relative z-10">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold text-gray-900">
-                ¿Por qué RAPIDITO? ¡Épa!
+              <h2 className="mb-4 flex items-center justify-center gap-3 text-3xl font-bold text-gray-900">
+                ¿Por qué
+                <Image src="/logo-r.png" alt="RAPIDITO" width={59} height={40} className="inline-block h-10 w-auto" />
+                ? ¡Épa!
               </h2>
               <p className="text-gray-600">La mejor experiencia de transporte en Lara</p>
             </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/auth-provider'
 import { Button } from '@/components/ui/button'
@@ -114,7 +115,7 @@ export default function CompleteDriverProfile() {
       <header className="sticky top-0 z-50 glass-header shadow-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">R</div>
+            <Image src="/logo-r.png" alt="RAPIDITO" width={47} height={32} className="h-8 w-auto" />
             <span className="font-bold text-gray-900">Completar Perfil</span>
           </div>
           <span className="text-sm text-gray-500">

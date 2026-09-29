@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useAuth } from '@/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -62,10 +63,8 @@ export default function AdminDashboard() {
       <header className="sticky top-0 z-50 border-b bg-white">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">
-              R
-            </div>
-            <span className="font-bold text-gray-900">RAPIDITO Admin</span>
+            <Image src="/logo-r.png" alt="RAPIDITO" width={47} height={32} className="h-8 w-auto" />
+            <span className="font-bold text-gray-900">Admin</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import FluidOrb from '@/components/ui/fluid-orb'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import Image from 'next/image'
 const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.MapView), { ssr: false })
 
 interface RideRequest {
@@ -107,15 +108,12 @@ export default function DriverDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 glassmorphism-bg-soft">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-header">
+      <header className="sticky top-0 z-50 border-b bg-white">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">
-              R
-            </div>
-            <span className="font-bold text-gray-900">RAPIDITO</span>
+            <Image src="/logo-r.png" alt="RAPIDITO" width={47} height={32} className="h-8 w-auto" />
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
@@ -133,7 +131,7 @@ export default function DriverDashboard() {
           {/* Status Panel */}
           <div className="lg:col-span-1 space-y-6">
             {/* Online Status */}
-            <Card className="glass-card relative overflow-hidden border-0">
+            <Card className="relative overflow-hidden border-0">
               {isOnline && (
                 <div className="absolute -top-8 -right-8 opacity-30 pointer-events-none">
                   <FluidOrb size={120} color="#22C55E" />
@@ -166,7 +164,7 @@ export default function DriverDashboard() {
             </Card>
 
             {/* Today's Stats */}
-            <Card className="glass-card border-0">
+            <Card className="border-0">
               <CardHeader>
                 <CardTitle>Ganancias de hoy</CardTitle>
               </CardHeader>
@@ -192,30 +190,30 @@ export default function DriverDashboard() {
             </Card>
 
             {/* Quick Actions */}
-            <Card className="glass-card border-0">
+            <Card className="border-0">
               <CardContent className="p-4 space-y-2">
                 <Link href="/driver/profile">
-                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
+                  <Button variant="outline" className="w-full justify-start border-0 bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 hover:bg-[#E55D00]">
                     👤 Mi Perfil y Moto
                   </Button>
                 </Link>
                 <Link href="/driver/documents">
-                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
+                  <Button variant="outline" className="w-full justify-start border-0 bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 hover:bg-[#E55D00]">
                     📄 Mi Documentación
                   </Button>
                 </Link>
                 <Link href="/driver/wallet">
-                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
+                  <Button variant="outline" className="w-full justify-start border-0 bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 hover:bg-[#E55D00]">
                     💰 Mi Cartera
                   </Button>
                 </Link>
                 <Link href="/driver/history">
-                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
+                  <Button variant="outline" className="w-full justify-start border-0 bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 hover:bg-[#E55D00]">
                     📊 Historial
                   </Button>
                 </Link>
                 <Link href="/driver/faq">
-                  <Button variant="outline" className="w-full justify-start glass-btn border-0 text-white">
+                  <Button variant="outline" className="w-full justify-start border-0 bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 hover:bg-[#E55D00]">
                     📚 Tutorial y Ayuda
                   </Button>
                 </Link>
@@ -225,7 +223,7 @@ export default function DriverDashboard() {
 
           {/* Map Area */}
           <div className="lg:col-span-2">
-            <Card className="glass-card h-[500px] lg:h-[600px] overflow-hidden">
+            <Card className="h-[500px] lg:h-[600px] overflow-hidden">
               <MapView
                 center={currentLocation ? [currentLocation.lat, currentLocation.lng] : undefined}
                 markers={currentLocation ? [{
@@ -246,7 +244,7 @@ export default function DriverDashboard() {
                 </h2>
                 <div className="space-y-4">
                   {rideRequests.map((request) => (
-                    <Card key={request.id} className="glass-card border-primary">
+                    <Card key={request.id} className="border-primary">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div>
