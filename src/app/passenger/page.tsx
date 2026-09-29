@@ -374,6 +374,7 @@ export default function PassengerDashboard() {
           estimatedFare: customPrice,
           vehicleTypeId: selectedVehicle,
           vehicleType: vehicle?.type || 'moto',
+          promoCode: appliedPromo && appliedPromo.code !== 'FIRST_RIDE' ? appliedPromo.code : undefined,
           riderName: riderMode === 'other' ? riderName.trim() : undefined,
           riderPhone: riderMode === 'other' ? riderPhone.trim() : undefined,
         }),

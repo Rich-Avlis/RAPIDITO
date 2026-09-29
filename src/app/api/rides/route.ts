@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { rideRequestSchema } from '@/lib/validations'
 import { calculateFare, calculateDistance, calculateEta } from '@/services/fare'
+import { getRideDiscount, applyDiscount } from '@/services/discount'
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/api-response'
 
 export async function POST(request: NextRequest) {
@@ -36,6 +37,14 @@ export async function POST(request: NextRequest) {
       validatedData.vehicleType || 'moto'
     )
 
+    // Descuento: primeros 2 viajes (5%) o código de referido (10%)
+    const { discountPercent, promoCode } = await getRideDiscount(
+      user.id,
+      user.passengerProfile!.id,
+      validatedData.promoCode
+    )
+    const total = applyDiscount(fare.total, discountPercent)
+
     // Create ride
     const ride = await prisma.ride.create({
       data: {
@@ -47,7 +56,9 @@ export async function POST(request: NextRequest) {
         destAddress: validatedData.destAddress,
         destLat: validatedData.destLat,
         destLng: validatedData.destLng,
-        estimatedFare: fare.total,
+        estimatedFare: total,
+        discountPercent,
+        promoCode,
         distanceKm: distance,
         durationMinutes: duration,
         vehicleType: validatedData.vehicleType || 'moto',
@@ -69,8 +80,9 @@ export async function POST(request: NextRequest) {
       fare: {
         distance: Math.round(distance * 100) / 100,
         duration,
-        estimatedFare: fare.total,
-        breakdown: fare,
+        estimatedFare: total,
+        discount: discountPercent,
+        breakdown: { ...fare, discount: discountPercent, total },
       },
     }, 'Ride requested successfully')
   } catch (error) {

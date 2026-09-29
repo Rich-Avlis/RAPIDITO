@@ -37,6 +37,7 @@ export const rideRequestSchema = z.object({
   vehicleType: z.enum(['moto', 'car', 'chill', 'pets']).optional(),
   riderName: z.string().min(1).max(80).optional(),
   riderPhone: z.string().min(4).max(20).optional(),
+  promoCode: z.string().min(1).max(40).optional(),
 })
 
 export const negotiationSchema = z.object({

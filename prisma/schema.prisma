@@ -249,6 +249,8 @@ model Ride {
   // Pricing
   estimatedFare   Float
   finalFare       Float?
+  discountPercent Int    @default(0) // 5 = primer viaje, 10 = código referido
+  promoCode       String? // código de referido usado (si aplica)
   distanceKm      Float?
   durationMinutes Float?
 
