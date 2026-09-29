@@ -209,7 +209,6 @@ const KNOWN_PLACES: Record<string, { zone: string; city: string }> = {
   'los andes': { zone: 'bqto-barrios', city: 'barquisimeto' },
 
   // === BARQUISIMETO ZONA LEJANA ===
-  'barquisimeto': { zone: 'bqto-lejano', city: 'barquisimeto' },
   'tacao': { zone: 'bqto-lejano', city: 'barquisimeto' },
   'anzoátegui': { zone: 'bqto-lejano', city: 'barquisimeto' },
   'quisquirí': { zone: 'bqto-lejano', city: 'barquisimeto' },
@@ -223,12 +222,12 @@ const KNOWN_PLACES: Record<string, { zone: string; city: string }> = {
   'el tumo': { zone: 'bqto-ciudad', city: 'el tumo' },
 }
 
-// Coordenadas de referencia
+// Coordenadas de referencia (verificadas)
 const CITY_CENTERS: Record<string, Coordinates> = {
-  quibor: { lat: 9.3167, lng: -70.6045 },
+  quibor: { lat: 9.93, lng: -69.62 },
   barquisimeto: { lat: 10.0647, lng: -69.3570 },
   carora: { lat: 10.1734, lng: -70.0762 },
-  tocuyo: { lat: 9.9286, lng: -70.7344 },
+  tocuyo: { lat: 9.7833, lng: -69.2667 },
 }
 
 function isNightTime(): boolean {
@@ -272,26 +271,24 @@ function detectZone(
     const distToQuibor = haversine(originCoords.lat, originCoords.lng, CITY_CENTERS.quibor.lat, CITY_CENTERS.quibor.lng)
     const distToBqto = haversine(originCoords.lat, originCoords.lng, CITY_CENTERS.barquisimeto.lat, CITY_CENTERS.barquisimeto.lng)
 
-    // Si está lejos de Quíbor pero cerca de Barquisimeto
-    if (distToQuibor > 10 && distToBqto < 15) {
-      if (distanceKm <= 3) return { tariff: QUIBOR_TARIFFS['quibor-centro'], zoneKey: 'bqto-centro', city: 'barquisimeto' }
+    // 1. Viaje largo → interciudad (antes que cualquier zona de ciudad,
+    //    para que Quíbor ↔ Barquisimeto no caiga en "rural" o "periferia")
+    if (distanceKm > 18) {
+      if (distanceKm <= 45) return { tariff: INTERCITY_TARIFFS['quibor-bqto'], zoneKey: 'quibor-bqto', city: 'intercity' }
+      return { tariff: INTERCITY_TARIFFS['bqto-ciudad'], zoneKey: 'bqto-ciudad', city: 'intercity' }
+    }
+
+    // 2. Viaje corto → ciudad más cercana al origen, zona por distancia del viaje
+    if (distToBqto < distToQuibor) {
+      if (distanceKm <= 3) return { tariff: BARQUISIMETO_TARIFFS['bqto-centro'], zoneKey: 'bqto-centro', city: 'barquisimeto' }
       if (distanceKm <= 8) return { tariff: BARQUISIMETO_TARIFFS['bqto-barrios'], zoneKey: 'bqto-barrios', city: 'barquisimeto' }
       if (distanceKm <= 15) return { tariff: BARQUISIMETO_TARIFFS['bqto-lejano'], zoneKey: 'bqto-lejano', city: 'barquisimeto' }
       return { tariff: BARQUISIMETO_TARIFFS['bqto-periferia'], zoneKey: 'bqto-periferia', city: 'barquisimeto' }
     }
 
-    // Si está lejos de ambos centros → interciudad
-    if (distToQuibor > 5 && distToBqto > 15) {
-      if (distanceKm <= 10) return { tariff: INTERCITY_TARIFFS['quibor-pueblo'], zoneKey: 'quibor-pueblo', city: 'intercity' }
-      return { tariff: INTERCITY_TARIFFS['quibor-bqto'], zoneKey: 'quibor-bqto', city: 'intercity' }
-    }
-
-    // Cerca de Quíbor
-    if (distToQuibor <= 10) {
-      if (distanceKm <= 2) return { tariff: QUIBOR_TARIFFS['quibor-centro'], zoneKey: 'quibor-centro', city: 'quibor' }
-      if (distanceKm <= 5) return { tariff: QUIBOR_TARIFFS['quibor-barrios'], zoneKey: 'quibor-barrios', city: 'quibor' }
-      return { tariff: QUIBOR_TARIFFS['quibor-rural'], zoneKey: 'quibor-rural', city: 'quibor' }
-    }
+    if (distanceKm <= 2) return { tariff: QUIBOR_TARIFFS['quibor-centro'], zoneKey: 'quibor-centro', city: 'quibor' }
+    if (distanceKm <= 5) return { tariff: QUIBOR_TARIFFS['quibor-barrios'], zoneKey: 'quibor-barrios', city: 'quibor' }
+    return { tariff: QUIBOR_TARIFFS['quibor-rural'], zoneKey: 'quibor-rural', city: 'quibor' }
   }
 
   // Fallback por distancia
