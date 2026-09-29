@@ -23,7 +23,7 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 glass-header">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="container mx-auto flex h-14 items-center justify-between gap-2 px-3 sm:h-16 sm:px-4">
           <div className="flex items-center gap-2">
             <Image
               src="/logo-r.png"
@@ -31,16 +31,16 @@ export default function HomePage() {
               width={48}
               height={33}
               priority
-              className="h-9 w-auto drop-shadow-md"
+              className="h-8 w-auto drop-shadow-md sm:h-9"
             />
-            <span className="text-xl font-bold text-gray-900">RAPIDITO</span>
+            <span className="hidden text-xl font-bold text-gray-900 sm:inline">RAPIDITO</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <Link href="/login">
-              <Button variant="ghost" className="glass-card border-0">Iniciar Sesión</Button>
+              <Button variant="ghost" className="h-9 px-2.5 text-[13px] sm:h-10 sm:px-4 sm:text-sm">Iniciar Sesión</Button>
             </Link>
             <Link href="/register">
-              <Button className="glass-btn border-0 text-white">Registrarse</Button>
+              <Button className="glass-btn h-9 border-0 px-3 text-[13px] text-white sm:h-10 sm:px-4 sm:text-sm">Registrarse</Button>
             </Link>
           </div>
         </div>
@@ -48,62 +48,62 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <main className="flex-1">
-        <section className="relative overflow-hidden glassmorphism-bg py-20">
+        <section className="relative overflow-hidden glassmorphism-bg py-12 sm:py-20">
           {/* FluidOrb decorations */}
-          <div className="absolute -top-20 -right-20 opacity-40 pointer-events-none">
+          <div className="absolute -top-20 -right-20 hidden opacity-40 pointer-events-none sm:block">
             <FluidOrb size={320} color="#FF6B00" />
           </div>
-          <div className="absolute -bottom-32 -left-32 opacity-25 pointer-events-none">
+          <div className="absolute -bottom-32 -left-32 hidden opacity-25 pointer-events-none sm:block">
             <FluidOrb size={400} color="#E55D00" />
           </div>
           {/* Glass blobs */}
           <div className="glass-blob w-72 h-72 -left-20 top-1/3 bg-[#FF6B00]/30" />
           <div className="glass-blob w-64 h-64 right-10 -bottom-16 bg-[#FDBA3C]/40" />
           {/* Decorative elements - Lara icons */}
-          <div className="absolute top-10 left-10 text-6xl opacity-10 animate-float">
+          <div className="absolute top-10 left-10 hidden animate-float text-6xl opacity-10 sm:block">
             <svg viewBox="0 0 100 200" className="w-16 h-32 text-[#FF6B00]">
               <polygon points="50,0 60,180 40,180" fill="currentColor" opacity="0.3"/>
               <polygon points="45,180 55,180 52,200 48,200" fill="currentColor" opacity="0.4"/>
               <circle cx="50" cy="10" r="5" fill="currentColor" opacity="0.5"/>
             </svg>
           </div>
-          <div className="absolute top-20 right-20 text-5xl opacity-10 animate-float" style={{ animationDelay: '1s' }}>
+          <div className="absolute top-20 right-20 hidden animate-float text-5xl opacity-10 sm:block" style={{ animationDelay: '1s' }}>
             <svg viewBox="0 0 120 100" className="w-24 h-20 text-[#FF6B00]">
               <ellipse cx="60" cy="50" rx="50" ry="40" fill="currentColor" opacity="0.2"/>
               <ellipse cx="80" cy="40" rx="35" ry="30" fill="currentColor" opacity="0.3"/>
               <ellipse cx="40" cy="55" rx="25" ry="20" fill="currentColor" opacity="0.25"/>
             </svg>
           </div>
-          <div className="absolute bottom-10 left-1/4 text-4xl opacity-10 animate-float" style={{ animationDelay: '2s' }}>🏍️</div>
-          <div className="absolute bottom-20 right-1/4 text-5xl opacity-10 animate-float" style={{ animationDelay: '0.5s' }}>🗺️</div>
+          <div className="absolute bottom-10 left-1/4 hidden animate-float text-4xl opacity-10 sm:block" style={{ animationDelay: '2s' }}>🏍️</div>
+          <div className="absolute bottom-20 right-1/4 hidden animate-float text-5xl opacity-10 sm:block" style={{ animationDelay: '0.5s' }}>🗺️</div>
 
           <div className="container mx-auto px-4">
-            <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div className="grid items-center gap-8 sm:gap-12 lg:grid-cols-2">
               {/* Left content */}
               <div className="text-center lg:text-left">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#FF6B00]/10 px-4 py-2 text-sm text-[#FF6B00]">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#FF6B00]/10 px-3 py-1.5 text-xs text-[#FF6B00] sm:px-4 sm:py-2 sm:text-sm">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF6B00] opacity-75"></span>
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FF6B00]"></span>
                   </span>
                   Disponible en Quíbor, Lara 🇻🇪
                 </div>
-                <h1 className="mb-6 text-5xl font-bold tracking-tight text-gray-900 lg:text-6xl">
+                <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 sm:mb-6 sm:text-5xl lg:text-6xl">
                   Tu viaje,{' '}
                   <span className="text-[#FF6B00]">rápido</span> y{' '}
                   <span className="text-[#FF6B00]">seguro</span>
                 </h1>
-                <p className="mb-10 text-xl text-gray-600">
+                <p className="mb-6 text-base text-gray-600 sm:mb-10 sm:text-xl">
                   Conectamos pasajeros con conductores de confianza en Quíbor y todo el Estado Lara. 
                   Solicita tu viaje en segundos. <strong className="text-[#FF6B00]">¡Épa, chamo!</strong>
                 </p>
-                <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-                  <Link href="/register?role=PASSENGER">
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4 lg:justify-start">
+                  <Link href="/register?role=PASSENGER" className="w-full sm:w-auto">
                     <Button size="xl" className="w-full glass-btn border-0 text-white sm:w-auto">
                       🚗 Solicitar Viaje
                     </Button>
                   </Link>
-                  <Link href="/register?role=DRIVER">
+                  <Link href="/register?role=DRIVER" className="w-full sm:w-auto">
                     <Button size="xl" className="w-full glass-card text-[#FF6B00] border-0 hover:bg-white/70 sm:w-auto">
                       🏍️ Ser Conductor
                     </Button>
@@ -111,18 +111,18 @@ export default function HomePage() {
                 </div>
 
                 {/* Stats */}
-                <div className="mt-12 grid grid-cols-3 gap-4 text-center lg:text-left">
-                  <div className="glass-card rounded-2xl p-4">
-                    <p className="text-3xl font-bold text-[#FF6B00]">100+</p>
-                    <p className="text-sm text-gray-500">Viajes realizados</p>
+                <div className="mt-8 grid grid-cols-3 gap-2 text-center sm:mt-12 sm:gap-4 lg:text-left">
+                  <div className="glass-card rounded-2xl p-2.5 sm:p-4">
+                    <p className="text-2xl font-bold text-[#FF6B00] sm:text-3xl">100+</p>
+                    <p className="break-words text-[11px] leading-tight text-gray-500 sm:text-sm">Viajes realizados</p>
                   </div>
-                  <div className="glass-card rounded-2xl p-4">
-                    <p className="text-3xl font-bold text-[#FF6B00]">50+</p>
-                    <p className="text-sm text-gray-500">Conductores activos</p>
+                  <div className="glass-card rounded-2xl p-2.5 sm:p-4">
+                    <p className="text-2xl font-bold text-[#FF6B00] sm:text-3xl">50+</p>
+                    <p className="break-words text-[11px] leading-tight text-gray-500 sm:text-sm">Conductores activos</p>
                   </div>
-                  <div className="glass-card rounded-2xl p-4">
-                    <p className="text-3xl font-bold text-[#FF6B00]">4.9</p>
-                    <p className="text-sm text-gray-500">Calificación promedio</p>
+                  <div className="glass-card rounded-2xl p-2.5 sm:p-4">
+                    <p className="text-2xl font-bold text-[#FF6B00] sm:text-3xl">4.9</p>
+                    <p className="break-words text-[11px] leading-tight text-gray-500 sm:text-sm">Calificación promedio</p>
                   </div>
                 </div>
               </div>
@@ -230,23 +230,23 @@ export default function HomePage() {
         </section>
 
         {/* How it works */}
-        <section className="py-20 glassmorphism-bg-soft relative overflow-hidden">
+        <section className="relative overflow-hidden py-12 glassmorphism-bg-soft sm:py-20">
           <div className="glass-blob w-80 h-80 -right-20 -top-20 bg-[#FF6B00]/20" />
           <div className="container mx-auto px-4 relative z-10">
-            <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold text-gray-900">
+            <div className="mb-8 text-center sm:mb-12">
+              <h2 className="mb-4 text-2xl font-bold text-gray-900 sm:text-3xl">
                 ¿Cómo funciona, chamo?
               </h2>
-              <p className="text-gray-600">Solicita tu viaje en 4 simples pasos</p>
+              <p className="text-sm text-gray-600 sm:text-base">Solicita tu viaje en 4 simples pasos</p>
             </div>
-            <div className="grid gap-8 md:grid-cols-4">
+            <div className="grid gap-4 sm:gap-8 md:grid-cols-4">
               {[
                 { step: '1', title: 'Pa\' donde vas', desc: 'Escribe tu destino y te calculamos la ruta.', icon: '📍', color: 'bg-blue-100 text-blue-600' },
                 { step: '2', title: 'Conoce el precio', desc: 'Te damos la tarifa justa pa\' que viajes tranquilo.', icon: '💰', color: 'bg-green-100 text-green-600' },
                 { step: '3', title: 'Negocia si quieres', desc: '¿No te cuadra el precio? ¡Haz tu oferta!', icon: '🤝', color: 'bg-yellow-100 text-yellow-600' },
                 { step: '4', title: '¡Pa\' la calle!', desc: 'Sigue al conductor en tiempo real y viaja seguro.', icon: '🏍️', color: 'bg-purple-100 text-purple-600' },
               ].map((item) => (
-                <div key={item.step} className="glass-card rounded-2xl p-6 text-center relative">
+                <div key={item.step} className="glass-card rounded-2xl p-4 text-center relative sm:p-6">
                   <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${item.color} text-2xl`}>
                     {item.icon}
                   </div>
@@ -262,21 +262,21 @@ export default function HomePage() {
         </section>
 
         {/* Features */}
-        <section className="py-20 glassmorphism-bg relative overflow-hidden">
+        <section className="relative overflow-hidden py-12 glassmorphism-bg sm:py-20">
           <div className="glass-blob w-96 h-96 -left-32 top-1/4 bg-[#FDBA3C]/30" />
           <div className="glass-blob w-72 h-72 right-0 -bottom-20 bg-[#FF6B00]/25" />
           <div className="container mx-auto px-4 relative z-10">
-            <div className="mb-12 text-center">
-              <h2 className="mb-4 flex items-center justify-center gap-3 text-3xl font-bold text-gray-900">
+            <div className="mb-8 text-center sm:mb-12">
+              <h2 className="mb-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-2xl font-bold text-gray-900 sm:text-3xl">
                 ¿Por qué
-                <Image src="/logo-r.png" alt="RAPIDITO" width={59} height={40} className="inline-block h-10 w-auto" />
+                <Image src="/logo-r.png" alt="RAPIDITO" width={59} height={40} className="inline-block h-8 w-auto sm:h-10" />
                 ? ¡Épa!
               </h2>
-              <p className="text-gray-600">La mejor experiencia de transporte en Lara</p>
+              <p className="text-sm text-gray-600 sm:text-base">La mejor experiencia de transporte en Lara</p>
             </div>
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="grid gap-4 sm:gap-8 md:grid-cols-3">
               <Card className="glass-card border-0">
-                <CardContent className="p-8 text-center">
+                <CardContent className="p-6 text-center sm:p-8">
                   <div className="mb-4 text-5xl">⚡</div>
                   <h3 className="mb-3 text-xl font-semibold text-gray-900">Rápido como el viento</h3>
                   <p className="text-gray-600">
@@ -285,7 +285,7 @@ export default function HomePage() {
                 </CardContent>
               </Card>
               <Card className="glass-card border-0">
-                <CardContent className="p-8 text-center">
+                <CardContent className="p-6 text-center sm:p-8">
                   <div className="mb-4 text-5xl">🛡️</div>
                   <h3 className="mb-3 text-xl font-semibold text-gray-900">Seguro como casa</h3>
                   <p className="text-gray-600">
@@ -294,7 +294,7 @@ export default function HomePage() {
                 </CardContent>
               </Card>
               <Card className="glass-card border-0">
-                <CardContent className="p-8 text-center">
+                <CardContent className="p-6 text-center sm:p-8">
                   <div className="mb-4 text-5xl">💰</div>
                   <h3 className="mb-3 text-xl font-semibold text-gray-900">Económico, mi pana</h3>
                   <p className="text-gray-600">
@@ -307,19 +307,19 @@ export default function HomePage() {
         </section>
 
         {/* Lara Section */}
-        <section className="py-20 glassmorphism-bg-soft relative overflow-hidden">
+        <section className="relative overflow-hidden py-12 glassmorphism-bg-soft sm:py-20">
           <div className="glass-blob w-80 h-80 right-10 -bottom-24 bg-[#FF6B00]/25" />
           <div className="container mx-auto px-4 relative z-10">
-            <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div className="grid items-center gap-8 sm:gap-12 lg:grid-cols-2">
               <div className="text-center lg:text-left">
-                <h2 className="mb-6 text-3xl font-bold text-gray-900">
+                <h2 className="mb-4 text-2xl font-bold text-gray-900 sm:mb-6 sm:text-3xl">
                   Nacimos en Lara,{' '}
                   <span className="text-[#FF6B00]">¡100% GUAROS!</span>
                 </h2>
-                <p className="mb-6 text-lg text-gray-600">
+                <p className="mb-6 text-base text-gray-600 sm:text-lg">
                   RAPIDITO nace del corazón de Quíbor, Estado Lara. Conocemos cada calle, cada esquina, cada rincón de nuestra tierra linda.
                 </p>
-                <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 sm:gap-y-4 lg:justify-start">
                   <div className="flex items-center gap-2 text-gray-700">
                     <span className="text-2xl">🏗️</span>
                     <span>Obelisco de Barquisimeto</span>
@@ -338,11 +338,11 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="flex justify-center">
-                <div className="glass-card animate-float relative rounded-3xl p-6">
-                  <svg
-                    viewBox="0 0 1000 1000"
-                    className="h-64 w-64 sm:h-80 sm:w-80 lg:h-96 lg:w-96"
+                <div className="flex justify-center">
+                  <div className="glass-card animate-float relative rounded-3xl p-3 sm:p-6">
+                    <svg
+                      viewBox="0 0 1000 1000"
+                      className="h-56 w-56 sm:h-80 sm:w-80 lg:h-96 lg:w-96"
                     role="img"
                     aria-label="Mapa animado del estado Lara, Venezuela"
                   >
@@ -462,27 +462,27 @@ export default function HomePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="relative overflow-hidden py-20 bg-gradient-to-r from-[#FF6B00] to-[#E55D00]">
-          <div className="absolute -top-16 -left-16 opacity-20 pointer-events-none">
+        <section className="relative overflow-hidden bg-gradient-to-r from-[#FF6B00] to-[#E55D00] py-12 sm:py-20">
+          <div className="absolute -top-16 -left-16 hidden opacity-20 pointer-events-none sm:block">
             <FluidOrb size={280} color="#FFFFFF" />
           </div>
-          <div className="absolute -bottom-20 -right-20 opacity-15 pointer-events-none">
+          <div className="absolute -bottom-20 -right-20 hidden opacity-15 pointer-events-none sm:block">
             <FluidOrb size={350} color="#FFFFFF" />
           </div>
           <div className="container mx-auto px-4 text-center relative z-10">
-            <h2 className="mb-6 text-3xl font-bold text-white">
+            <h2 className="mb-4 text-2xl font-bold text-white sm:mb-6 sm:text-3xl">
               ¿Listo pa' viajar, chamo?
             </h2>
-            <p className="mb-8 text-lg text-white/80">
+            <p className="mb-6 text-base text-white/80 sm:mb-8 sm:text-lg">
               Únete a miles de personas que ya confían en RAPIDITO en todo Lara
             </p>
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link href="/register?role=PASSENGER">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
+              <Link href="/register?role=PASSENGER" className="w-full sm:w-auto">
                 <Button size="xl" className="w-full glass-card border-0 text-[#FF6B00] sm:w-auto">
                   🚗 Quiero viajar
                 </Button>
               </Link>
-              <Link href="/register?role=DRIVER">
+              <Link href="/register?role=DRIVER" className="w-full sm:w-auto">
                 <Button size="xl" className="w-full glass-card border-0 text-[#FF6B00] sm:w-auto">
                   🏍️ Quiero conducir
                 </Button>
@@ -493,9 +493,9 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="glass-header border-t-0 py-8">
+      <footer className="glass-header border-t-0 py-6 sm:py-8">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="flex flex-col items-center justify-between gap-3 text-center md:flex-row md:text-left">
             <div className="flex items-center gap-2">
               <Image
                 src="/logo-r.png"
