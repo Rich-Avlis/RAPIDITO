@@ -43,6 +43,8 @@ export default function DriverDashboard() {
   })
   const [rideRequests, setRideRequests] = useState<RideRequest[]>([])
   const [activeRide, setActiveRide] = useState<any>(null)
+  const [dismissedIds, setDismissedIds] = useState<string[]>([])
+  const [isUpdatingRide, setIsUpdatingRide] = useState(false)
 
   useEffect(() => {
     // Get driver's current location
@@ -82,6 +84,29 @@ export default function DriverDashboard() {
     const iv = setInterval(load, 10000)
     return () => clearInterval(iv)
   }, [isOnline])
+
+  // Recuperar viaje activo (al recargar o si otro cliente lo aceptó)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/rides?limit=20')
+        const data = await res.json()
+        if (!data.success) return
+        const rides = data.data.rides
+        const active = rides.find((r: { status: string }) =>
+          ['DRIVER_ASSIGNED', 'DRIVER_ARRIVED', 'TRIP_STARTED'].includes(r.status)
+        )
+        setActiveRide((prev: { status: string } | null) => {
+          if (active) return active
+          if (prev && ['COMPLETED', 'CANCELLED'].includes(prev.status)) return prev
+          return null
+        })
+      } catch {}
+    }
+    load()
+    const iv = setInterval(load, 8000)
+    return () => clearInterval(iv)
+  }, [user?.id])
 
   // Tasa BCV USD→Bs
   useEffect(() => {
@@ -138,6 +163,38 @@ export default function DriverDashboard() {
       }
     } catch (error) {
       console.error('Error toggling status:', error)
+    }
+  }
+
+  const updateRideStatus = async (rideId: string, action: string): Promise<boolean> => {
+    if (isUpdatingRide) return false
+    setIsUpdatingRide(true)
+    try {
+      const res = await fetch(`/api/rides/${rideId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setActiveRide(data.data.ride)
+        if (action === 'complete') {
+          const fare = data.data.ride.finalFare ?? data.data.ride.estimatedFare
+          setTodayStats(prev => ({
+            ...prev,
+            earnings: prev.earnings + fare,
+            trips: prev.trips + 1,
+          }))
+        }
+        return true
+      }
+      alert(data.error || 'Error al actualizar el viaje')
+      return false
+    } catch {
+      alert('Error de conexión')
+      return false
+    } finally {
+      setIsUpdatingRide(false)
     }
   }
 
@@ -274,14 +331,78 @@ export default function DriverDashboard() {
               />
             </Card>
 
+            {/* Active Trip */}
+            {activeRide && (
+              <div className="mt-6">
+                <Card className="border-primary">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-bold text-gray-900">Viaje activo</h2>
+                      <span className={`text-sm font-semibold ${
+                        activeRide.status === 'TRIP_STARTED' ? 'text-green-600' :
+                        activeRide.status === 'COMPLETED' ? 'text-primary' :
+                        activeRide.status === 'CANCELLED' ? 'text-red-500' : 'text-blue-600'
+                      }`}>
+                        {activeRide.status === 'DRIVER_ASSIGNED' && '🟠 Yendo al punto de recogida'}
+                        {activeRide.status === 'DRIVER_ARRIVED' && '🟡 Esperando en el punto'}
+                        {activeRide.status === 'TRIP_STARTED' && '🟢 Viaje en curso'}
+                        {activeRide.status === 'COMPLETED' && '✅ Completado'}
+                        {activeRide.status === 'CANCELLED' && '❌ Cancelado'}
+                      </span>
+                    </div>
+
+                    <div className="text-sm space-y-1">
+                      <p className="font-semibold text-gray-900">
+                        👤 {activeRide.riderName || `${activeRide.passenger?.user?.firstName} ${activeRide.passenger?.user?.lastName}`}
+                      </p>
+                      {(activeRide.riderPhone || activeRide.passenger?.user?.phone) && (
+                        <p className="text-gray-500">📱 {activeRide.riderPhone || activeRide.passenger?.user?.phone}</p>
+                      )}
+                      <p>📍 {activeRide.originAddress}</p>
+                      <p>🏁 {activeRide.destAddress}</p>
+                      <p className="text-lg font-bold text-primary">
+                        💰 ${(activeRide.finalFare ?? activeRide.estimatedFare).toFixed(2)}
+                        {fmtBs(activeRide.finalFare ?? activeRide.estimatedFare) && (
+                          <span className="ml-2 text-sm font-normal text-gray-500">≈ {fmtBs(activeRide.finalFare ?? activeRide.estimatedFare)}</span>
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {activeRide.status === 'DRIVER_ASSIGNED' && (
+                        <Button size="sm" variant="success" disabled={isUpdatingRide} onClick={() => updateRideStatus(activeRide.id, 'arrive')}>
+                          📍 Llegué al punto
+                        </Button>
+                      )}
+                      {activeRide.status === 'DRIVER_ARRIVED' && (
+                        <Button size="sm" variant="success" disabled={isUpdatingRide} onClick={() => updateRideStatus(activeRide.id, 'start')}>
+                          ▶️ Iniciar viaje
+                        </Button>
+                      )}
+                      {activeRide.status === 'TRIP_STARTED' && (
+                        <Button size="sm" variant="success" disabled={isUpdatingRide} onClick={() => updateRideStatus(activeRide.id, 'complete')}>
+                          🏁 Finalizar viaje
+                        </Button>
+                      )}
+                      {(activeRide.status === 'COMPLETED' || activeRide.status === 'CANCELLED') && (
+                        <Button size="sm" variant="outline" onClick={() => setActiveRide(null)}>
+                          Cerrar
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Ride Requests */}
-            {isOnline && (
+            {isOnline && !activeRide && (
               <div className="mt-6">
                 <h2 className="mb-4 text-xl font-bold text-gray-900">
-                  Solicitudes cercanas ({rideRequests.length})
+                  Solicitudes cercanas ({rideRequests.filter((r) => !dismissedIds.includes(r.id)).length})
                 </h2>
                 <div className="space-y-4">
-                  {rideRequests.map((request) => {
+                  {rideRequests.filter((r) => !dismissedIds.includes(r.id)).map((request) => {
                     const vehicle = VEHICLE_LABELS[request.vehicleType || 'moto']
                     return (
                     <Card key={request.id} className="border-primary">
@@ -311,13 +432,13 @@ export default function DriverDashboard() {
                             </p>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="success">
+                            <Button size="sm" variant="success" disabled={isUpdatingRide} onClick={() => updateRideStatus(request.id, 'accept')}>
                               Aceptar
                             </Button>
                             <Button size="sm" variant="outline">
                               Contraofertar
                             </Button>
-                            <Button size="sm" variant="destructive">
+                            <Button size="sm" variant="destructive" onClick={() => setDismissedIds(prev => [...prev, request.id])}>
                               Rechazar
                             </Button>
                           </div>
@@ -327,7 +448,7 @@ export default function DriverDashboard() {
                     )
                   })}
 
-                  {rideRequests.length === 0 && (
+                  {rideRequests.filter((r) => !dismissedIds.includes(r.id)).length === 0 && (
                     <div className="py-8 text-center text-gray-500">
                       <p>Esperando solicitudes...</p>
                     </div>

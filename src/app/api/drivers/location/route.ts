@@ -27,7 +27,7 @@ export async function PUT(request: NextRequest) {
     const activeRide = await prisma.ride.findFirst({
       where: {
         driverId: driverProfile.id,
-        status: { in: ['DRIVER_ASSIGNED', 'DRIVER_EN_ROUTE', 'TRIP_STARTED'] },
+        status: { in: ['DRIVER_ASSIGNED', 'DRIVER_ARRIVED', 'DRIVER_EN_ROUTE', 'TRIP_STARTED'] },
       },
     })
 

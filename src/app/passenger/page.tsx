@@ -287,6 +287,42 @@ export default function PassengerDashboard() {
     localStorage.setItem('rapidito_search_history', JSON.stringify(newHistory))
   }
 
+  // Seguimiento del viaje activo (buscar/conductor/en curso)
+  const rideStatusRef = useRef<{ id: string; status: string } | null>(null)
+  useEffect(() => {
+    if (!user) return
+    const ACTIVE = ['REQUESTED', 'SEARCHING_DRIVER', 'DRIVER_ASSIGNED', 'DRIVER_ARRIVED', 'TRIP_STARTED']
+    const load = async () => {
+      try {
+        const res = await fetch('/api/rides?limit=20')
+        const data = await res.json()
+        if (!data.success) return
+        const rides = data.data.rides
+        const prev = rideStatusRef.current
+
+        let next = rides.find((r: { id: string; status: string }) => ACTIVE.includes(r.status)) || null
+        if (!next && prev && ACTIVE.includes(prev.status)) {
+          next = rides.find((r: { id: string; status: string }) =>
+            r.id === prev.id && ['COMPLETED', 'CANCELLED'].includes(r.status)
+          ) || null
+        }
+        if (!next && prev && ['COMPLETED', 'CANCELLED'].includes(prev.status)) {
+          next = rides.find((r: { id: string; status: string }) => r.id === prev.id) || null
+        }
+
+        rideStatusRef.current = next ? { id: next.id, status: next.status } : null
+        setActiveRide(next)
+
+        if (next?.status === 'COMPLETED' && prev && ACTIVE.includes(prev.status)) {
+          setShowRatingModal(true)
+        }
+      } catch {}
+    }
+    load()
+    const iv = setInterval(load, 5000)
+    return () => clearInterval(iv)
+  }, [user])
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -478,6 +514,7 @@ export default function PassengerDashboard() {
         setShowRatingModal(false)
         setRating(5)
         setRatingComment('')
+        rideStatusRef.current = null
         setActiveRide(null)
         alert('¡Gracias por tu calificación!')
       } else {
@@ -838,6 +875,45 @@ export default function PassengerDashboard() {
 
       {/* Bottom Panel */}
       <div className="relative z-[1000] rounded-t-[2rem] shadow-[0_-6px_28px_rgba(0,0,0,0.12)]" style={{ backgroundColor: t.bgSecondary }}>
+        {/* Active ride status */}
+        {activeRide && (
+          <div className="p-4 border-b" style={{ borderColor: t.border }}>
+            <div className="rounded-2xl p-4" style={{ backgroundColor: t.bgTertiary }}>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="font-bold text-sm" style={{ color: t.text }}>
+                  {activeRide.status === 'REQUESTED' || activeRide.status === 'SEARCHING_DRIVER' ? '🚌 Buscando conductor...' :
+                    activeRide.status === 'DRIVER_ASSIGNED' ? `🚗 ${activeRide.driver?.user?.firstName || 'Tu conductor'} va en camino` :
+                    activeRide.status === 'DRIVER_ARRIVED' ? '📍 Tu conductor llegó al punto de recogida' :
+                    activeRide.status === 'TRIP_STARTED' ? '🛣️ Viaje en curso' :
+                    activeRide.status === 'COMPLETED' ? '✅ ¡Viaje completado!' :
+                    '❌ Viaje cancelado'}
+                </p>
+                {(activeRide.status === 'CANCELLED' || activeRide.status === 'COMPLETED') && (
+                  <button
+                    onClick={() => {
+                      rideStatusRef.current = null
+                      setActiveRide(null)
+                    }}
+                    className="text-xs underline shrink-0"
+                    style={{ color: t.textSecondary }}
+                  >
+                    Cerrar
+                  </button>
+                )}
+              </div>
+              <p className="text-xs truncate" style={{ color: t.textSecondary }}>
+                🏁 {activeRide.destAddress}
+              </p>
+              <p className="text-sm font-semibold" style={{ color: t.primary }}>
+                💰 ${(activeRide.finalFare ?? activeRide.estimatedFare).toFixed(2)}
+                {fmtBs(activeRide.finalFare ?? activeRide.estimatedFare) && (
+                  <span className="ml-1 font-normal text-xs">≈ {fmtBs(activeRide.finalFare ?? activeRide.estimatedFare)}</span>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* HOME VIEW */}
         {panelView === 'home' && (
           <div className="relative overflow-hidden">
