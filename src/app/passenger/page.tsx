@@ -39,6 +39,19 @@ interface SearchSuggestion {
 
 type PanelView = 'home' | 'search' | 'vehicles' | 'vehicleDetail' | 'ride'
 
+// Contact Picker API (Android)
+interface PickedContact {
+  name?: { formatted?: string; givenName?: string }[]
+  tel?: string[]
+}
+type ContactsApi = {
+  select: (properties: string[], options: { multiple: boolean }) => Promise<PickedContact[]>
+}
+const getContactsApi = (): ContactsApi | undefined =>
+  typeof navigator === 'undefined'
+    ? undefined
+    : (navigator as unknown as { contacts?: ContactsApi }).contacts
+
 export default function PassengerDashboard() {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
@@ -47,12 +60,21 @@ export default function PassengerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [nearbyDrivers, setNearbyDrivers] = useState<Driver[]>([])
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number }>({ lat: 9.3167, lng: -70.6045 })
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number }>({ lat: 9.93, lng: -69.62 })
   const [locationName, setLocationName] = useState('Quíbor, Lara')
 
-  const [origin, setOrigin] = useState<SelectedPlace>({ name: 'Quíbor, Lara', lat: 9.3167, lng: -70.6045 })
+  const [origin, setOrigin] = useState<SelectedPlace>({ name: 'Quíbor, Lara', lat: 9.93, lng: -69.62 })
   const [destination, setDestination] = useState<SelectedPlace | null>(null)
   const [selectingField, setSelectingField] = useState<'origin' | 'destination' | null>(null)
+
+  // ¿Quién va a viajar?
+  const [riderMode, setRiderMode] = useState<'self' | 'other'>('self')
+  const [riderName, setRiderName] = useState('')
+  const [riderPhone, setRiderPhone] = useState('')
+  const [recentRiders, setRecentRiders] = useState<{ name: string; phone: string }[]>([])
+
+  // Tasa BCV USD→Bs
+  const [bsRate, setBsRate] = useState<number | null>(null)
 
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
   const [rideEstimate, setRideEstimate] = useState<any>(null)
@@ -107,7 +129,33 @@ export default function PassengerDashboard() {
         setSearchHistory(JSON.parse(saved))
       } catch {}
     }
+    const savedRiders = localStorage.getItem('rapidito_recent_riders')
+    if (savedRiders) {
+      try {
+        setRecentRiders(JSON.parse(savedRiders))
+      } catch {}
+    }
   }, [])
+
+  // Load tasa BCV USD→Bs
+  useEffect(() => {
+    let alive = true
+    fetch('/api/rates')
+      .then((res) => res.json())
+      .then((data) => {
+        if (alive && data.success && data.data?.usdToBs) setBsRate(data.data.usdToBs)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const fmtBs = (usd: number) => {
+    if (!bsRate) return null
+    const bs = Math.round(usd * bsRate)
+    return `${bs.toLocaleString('es-VE')} Bs`
+  }
 
   // Load referral data
   useEffect(() => {
@@ -264,7 +312,11 @@ export default function PassengerDashboard() {
         },
         (error) => {
           console.error('Location error:', error)
-        }
+          if (error.code === error.PERMISSION_DENIED) {
+            setLocationName('Activa el permiso de ubicación')
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       )
     }
   }, [])
@@ -293,7 +345,20 @@ export default function PassengerDashboard() {
   // Request ride
   const requestRide = async () => {
     if (!origin || !destination || !selectedVehicle || isRequestingRide) return
-    
+
+    const vehicle = vehicleTypes.find(v => v.id === selectedVehicle)
+    if (riderMode === 'other') {
+      if (!riderName.trim() || !riderPhone.trim()) {
+        alert('Completa el nombre y teléfono de quien va a viajar')
+        return
+      }
+      // Guardar en contactos recientes
+      const trimmed = { name: riderName.trim(), phone: riderPhone.trim() }
+      const next = [trimmed, ...recentRiders.filter(r => r.phone !== trimmed.phone)].slice(0, 5)
+      setRecentRiders(next)
+      localStorage.setItem('rapidito_recent_riders', JSON.stringify(next))
+    }
+
     setIsRequestingRide(true)
     try {
       const response = await fetch('/api/rides', {
@@ -308,6 +373,9 @@ export default function PassengerDashboard() {
           destLng: destination.lng,
           estimatedFare: customPrice,
           vehicleTypeId: selectedVehicle,
+          vehicleType: vehicle?.type || 'moto',
+          riderName: riderMode === 'other' ? riderName.trim() : undefined,
+          riderPhone: riderMode === 'other' ? riderPhone.trim() : undefined,
         }),
       })
       
@@ -319,6 +387,9 @@ export default function PassengerDashboard() {
         setDestination(null)
         setSelectedVehicle(null)
         setRideEstimate(null)
+        setRiderMode('self')
+        setRiderName('')
+        setRiderPhone('')
       } else {
         alert(data.error || 'Error al solicitar viaje')
       }
@@ -327,6 +398,23 @@ export default function PassengerDashboard() {
       alert('Error al solicitar viaje')
     } finally {
       setIsRequestingRide(false)
+    }
+  }
+
+  // Seleccionar contacto del teléfono (Contact Picker API, Android)
+  const pickContact = async () => {
+    try {
+      const contactsApi = getContactsApi()
+      if (!contactsApi?.select) return
+      const picked = await contactsApi.select(['name', 'tel'], { multiple: false })
+      const c = picked?.[0]
+      if (!c) return
+      const name = c.name?.[0]?.formatted || c.name?.[0]?.givenName || ''
+      const tel = (c.tel?.[0] || '').replace(/[^\d+]/g, '')
+      if (name) setRiderName(name)
+      if (tel) setRiderPhone(tel)
+    } catch {
+      // Usuario canceló o no soportado
     }
   }
 
@@ -462,7 +550,7 @@ export default function PassengerDashboard() {
         })
         const data = await res.json()
         if (data.success) {
-          setRideEstimate(data.data)
+          setRideEstimate({ ...data.data, baseFare: data.data.estimatedFare, selectedVehicle: null })
         }
       } catch (e) {
         console.error('Estimate error:', e)
@@ -496,7 +584,7 @@ export default function PassengerDashboard() {
           }),
         })
         const data = await res.json()
-        if (data.success) setRideEstimate(data.data)
+        if (data.success) setRideEstimate({ ...data.data, baseFare: data.data.estimatedFare, selectedVehicle: null })
       } catch (e) {
         console.error('Estimate error:', e)
       }
@@ -537,7 +625,7 @@ export default function PassengerDashboard() {
             }),
           })
           const estData = await estRes.json()
-          if (estData.success) setRideEstimate(estData.data)
+          if (estData.success) setRideEstimate({ ...estData.data, baseFare: estData.data.estimatedFare, selectedVehicle: null })
         } catch (e) {
           console.error('Estimate error:', e)
         }
@@ -560,8 +648,10 @@ export default function PassengerDashboard() {
   }
 
   const vehicleTypes = [
-    { id: '2db9fd01-760d-4561-bd92-bb85e62c5c04', name: 'Moto', capacity: 1, icon: '🏍️', priceMultiplier: 1.0, eta: '3 min', image: '🛵', type: 'moto' },
-    { id: 'b3023f91-f02b-4d23-a37f-60c075da3a23', name: 'Económico', capacity: 3, icon: '🚗', priceMultiplier: 1.6, eta: '5 min', image: '🚙', type: 'car' },
+    { id: '2db9fd01-760d-4561-bd92-bb85e62c5c04', name: 'Moto', capacity: 1, capacityLabel: '1 persona', icon: '🏍️', priceMultiplier: 1.0, eta: '3 min', image: '🏍️', type: 'moto' },
+    { id: 'b3023f91-f02b-4d23-a37f-60c075da3a23', name: 'Carrito', capacity: 3, capacityLabel: '3 personas', icon: '🚗', priceMultiplier: 1.6, eta: '5 min', image: '🚗', type: 'car' },
+    { id: '324447af-3cf5-491c-acc6-ddc893c6c1d6', name: 'Carrito Chill', capacity: 5, capacityLabel: '5 personas', icon: '🚙', priceMultiplier: 2.0, eta: '6 min', image: '🚙', type: 'chill' },
+    { id: '9d4c2a71-58e6-4f3b-b0a9-7c2e5f8d1a44', name: 'Mascotas', capacity: 3, capacityLabel: '3 mascotas', icon: '🐕', priceMultiplier: 1.85, eta: '5 min', image: '🐕', type: 'pets' },
   ]
 
   const mapMarkers = [
@@ -1061,7 +1151,8 @@ export default function PassengerDashboard() {
             {/* Vehicle Options */}
             <div className="px-4 pb-4 flex gap-4 overflow-x-auto">
               {vehicleTypes.map((vehicle) => {
-                const basePrice = (rideEstimate?.estimatedFare || 1.0) * vehicle.priceMultiplier
+                const baseFare = rideEstimate?.baseFare ?? rideEstimate?.estimatedFare ?? 1.0
+                const basePrice = baseFare * vehicle.priceMultiplier
                 const discount = getDiscount()
                 const discountedPrice = basePrice * (1 - discount / 100)
 
@@ -1070,7 +1161,16 @@ export default function PassengerDashboard() {
                     key={vehicle.id}
                     onClick={async () => {
                       setSelectedVehicle(vehicle.id)
-                      // Recalculate fare for this vehicle type
+                      // Precio base sin multiplicar (por si es el primer vehículo)
+                      const prevBase = rideEstimate?.baseFare ?? rideEstimate?.estimatedFare ?? 1.0
+                      let serverTotal = prevBase * vehicle.priceMultiplier
+                      let estimateData: Record<string, unknown> = {
+                        ...(rideEstimate || {}),
+                        baseFare: prevBase,
+                        estimatedFare: serverTotal,
+                        selectedVehicle: vehicle,
+                      }
+                      // Recalculate fare for this vehicle type (fuente de verdad del servidor)
                       if (origin && destination) {
                         try {
                           const res = await fetch('/api/rides/estimate', {
@@ -1088,19 +1188,20 @@ export default function PassengerDashboard() {
                           })
                           const data = await res.json()
                           if (data.success) {
-                            const disc = getDiscount()
-                            const finalPrice = data.data.estimatedFare * (1 - disc / 100)
-                            setRideEstimate({ ...data.data, selectedVehicle: vehicle, estimatedFare: finalPrice })
-                            setCustomPrice(finalPrice)
+                            serverTotal = data.data.estimatedFare
+                            estimateData = {
+                              ...data.data,
+                              baseFare: data.data.estimatedFare / vehicle.priceMultiplier,
+                              estimatedFare: serverTotal,
+                              selectedVehicle: vehicle,
+                            }
                           }
                         } catch (e) {
-                          setRideEstimate({ ...rideEstimate, selectedVehicle: vehicle, estimatedFare: discountedPrice })
-                          setCustomPrice(discountedPrice)
+                          // fallback: se mantiene el precio calculado localmente
                         }
-                      } else {
-                        setRideEstimate({ ...rideEstimate, selectedVehicle: vehicle, estimatedFare: discountedPrice })
-                        setCustomPrice(discountedPrice)
                       }
+                      setRideEstimate(estimateData)
+                      setCustomPrice(serverTotal * (1 - getDiscount() / 100))
                       setPanelView('vehicleDetail')
                     }}
                     className="min-w-[160px] rounded-2xl p-5 text-left transition-all"
@@ -1112,7 +1213,7 @@ export default function PassengerDashboard() {
                       </div>
                     )}
                     <p className="font-bold text-lg" style={{ color: t.text }}>{vehicle.name}</p>
-                    <p className="text-sm" style={{ color: t.textSecondary }}>👤 {vehicle.capacity}</p>
+                    <p className="text-sm" style={{ color: t.textSecondary }}>{vehicle.capacityLabel}</p>
                     <div className="text-5xl my-4">{vehicle.image}</div>
                     <div>
                       {discount > 0 ? (
@@ -1122,6 +1223,9 @@ export default function PassengerDashboard() {
                         </>
                       ) : (
                         <p className="font-bold text-xl" style={{ color: t.text }}>${basePrice.toFixed(2)} ↑</p>
+                      )}
+                      {fmtBs(discount > 0 ? discountedPrice : basePrice) && (
+                        <p className="text-xs mt-0.5" style={{ color: t.textSecondary }}>≈ {fmtBs(discount > 0 ? discountedPrice : basePrice)}</p>
                       )}
                     </div>
                     {rideEstimate?.distance && (
@@ -1179,7 +1283,7 @@ export default function PassengerDashboard() {
                 <div>
                   <h2 className="text-2xl font-bold" style={{ color: t.text }}>{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
                   <p style={{ color: t.textSecondary }}>Capacidad Máxima</p>
-                  <p className="text-lg" style={{ color: t.text }}>👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
+                  <p className="text-lg" style={{ color: t.text }}>👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacityLabel}</p>
                   {rideEstimate?.distance && (
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-sm px-2 py-1 rounded-lg" style={{ backgroundColor: t.bgTertiary, color: t.textSecondary }}>
@@ -1190,7 +1294,7 @@ export default function PassengerDashboard() {
                       </span>
                     </div>
                   )}
-                  {selectedVehicle === 'moto' && (
+                  {vehicleTypes.find(v => v.id === selectedVehicle)?.type === 'moto' && (
                     <p className="text-sm mt-2" style={{ color: t.textSecondary }}>Es necesario el uso del casco para este servicio</p>
                   )}
                 </div>
@@ -1229,6 +1333,9 @@ export default function PassengerDashboard() {
                       <span className="font-bold text-lg" style={{ color: t.text }}>${((rideEstimate?.estimatedFare || 1.0) * 0.95).toFixed(2)}</span>
                       <span className="text-sm line-through" style={{ color: t.textSecondary }}>${(rideEstimate?.estimatedFare || 1.0).toFixed(2)}</span>
                     </div>
+                    {fmtBs((rideEstimate?.estimatedFare || 1.0) * 0.95) && (
+                      <p className="text-xs" style={{ color: t.textSecondary }}>≈ {fmtBs((rideEstimate?.estimatedFare || 1.0) * 0.95)}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-white px-2 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: t.primary }}>5%</span>
@@ -1313,9 +1420,86 @@ export default function PassengerDashboard() {
                 <div>
                   <h2 className="text-2xl font-bold" style={{ color: t.text }}>{vehicleTypes.find(v => v.id === selectedVehicle)?.name}</h2>
                   <p style={{ color: t.textSecondary }}>Capacidad Máxima</p>
-                  <p className="text-lg" style={{ color: t.text }}>👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacity}</p>
+                  <p className="text-lg" style={{ color: t.text }}>👤 {vehicleTypes.find(v => v.id === selectedVehicle)?.capacityLabel}</p>
                 </div>
                 <div className="text-7xl">{vehicleTypes.find(v => v.id === selectedVehicle)?.image}</div>
+              </div>
+
+              {/* ¿Quién va a viajar? */}
+              <div className="rounded-2xl p-5 mb-6" style={{ backgroundColor: t.bgTertiary }}>
+                <p className="font-bold mb-3" style={{ color: t.text }}>¿Quién va a viajar?</p>
+                <div className="flex gap-3 mb-3">
+                  <button
+                    onClick={() => setRiderMode('self')}
+                    className="flex-1 rounded-2xl py-3 font-bold text-sm border-2 transition-all"
+                    style={{
+                      backgroundColor: riderMode === 'self' ? t.accent : t.bgSecondary,
+                      borderColor: riderMode === 'self' ? t.accent : t.border,
+                      color: riderMode === 'self' ? t.primaryText : t.textSecondary,
+                    }}
+                  >
+                    🧍 Tú (titular)
+                  </button>
+                  <button
+                    onClick={() => setRiderMode('other')}
+                    className="flex-1 rounded-2xl py-3 font-bold text-sm border-2 transition-all"
+                    style={{
+                      backgroundColor: riderMode === 'other' ? t.accent : t.bgSecondary,
+                      borderColor: riderMode === 'other' ? t.accent : t.border,
+                      color: riderMode === 'other' ? t.primaryText : t.textSecondary,
+                    }}
+                  >
+                    👥 Otra persona
+                  </button>
+                </div>
+
+                {riderMode === 'other' && (
+                  <div className="space-y-2">
+                    {recentRiders.length > 0 && (
+                      <div className="flex gap-2 flex-wrap">
+                        {recentRiders.map((r) => (
+                          <button
+                            key={r.phone}
+                            onClick={() => { setRiderName(r.name); setRiderPhone(r.phone) }}
+                            className="px-3 py-1.5 rounded-full text-xs font-bold border"
+                            style={{ backgroundColor: t.bgSecondary, borderColor: t.border, color: t.text }}
+                          >
+                            {r.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <input
+                      type="text"
+                      value={riderName}
+                      onChange={(e) => setRiderName(e.target.value)}
+                      placeholder="Nombre de quien viaja"
+                      className="w-full rounded-2xl px-4 py-3 text-sm"
+                      style={{ backgroundColor: t.bgSecondary, color: t.text }}
+                    />
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={riderPhone}
+                      onChange={(e) => setRiderPhone(e.target.value)}
+                      placeholder="Teléfono (ej. 0412...)"
+                      className="w-full rounded-2xl px-4 py-3 text-sm"
+                      style={{ backgroundColor: t.bgSecondary, color: t.text }}
+                    />
+                    {getContactsApi()?.select && (
+                      <button
+                        onClick={pickContact}
+                        className="w-full rounded-2xl py-2.5 text-sm font-bold border-2"
+                        style={{ borderColor: t.border, color: t.text }}
+                      >
+                        📇 Seleccionar del contacto
+                      </button>
+                    )}
+                    <p className="text-xs" style={{ color: t.textSecondary }}>
+                      El conductor verá este nombre y teléfono para comunicarse
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Price Selection */}
@@ -1324,7 +1508,12 @@ export default function PassengerDashboard() {
                   <span className="border px-5 py-2 rounded-2xl font-bold text-lg" style={{ backgroundColor: t.bgSecondary, borderColor: t.border, color: t.text }}>
                     Tarifa Recomendada
                   </span>
-                  <span className="text-2xl font-bold" style={{ color: t.text }}>${customPrice.toFixed(2)}</span>
+                  <div>
+                    <span className="text-2xl font-bold" style={{ color: t.text }}>${customPrice.toFixed(2)}</span>
+                    {fmtBs(customPrice) && (
+                      <p className="text-xs text-center" style={{ color: t.textSecondary }}>≈ {fmtBs(customPrice)}</p>
+                    )}
+                  </div>
                 </div>
 
                 <p className="text-center text-sm mb-4" style={{ color: t.textSecondary }}>Seleccione el monto a pagar</p>

@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
       distance,
       duration,
       validatedData.originAddress,
-      validatedData.destAddress
+      validatedData.destAddress,
+      validatedData.vehicleType || 'moto'
     )
 
     // Create ride
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
         estimatedFare: fare.total,
         distanceKm: distance,
         durationMinutes: duration,
+        vehicleType: validatedData.vehicleType || 'moto',
+        riderName: validatedData.riderName,
+        riderPhone: validatedData.riderPhone,
       },
       include: {
         passenger: {
@@ -95,7 +99,10 @@ export async function GET(request: NextRequest) {
     if (user.role === 'PASSENGER') {
       where.passengerId = user.passengerProfile?.id
     } else if (user.role === 'DRIVER') {
-      where.driverId = user.driverProfile?.id
+      // Conductor viendo solicitudes abiertas: ver todas las disponibles
+      if (status !== 'SEARCHING_DRIVER') {
+        where.driverId = user.driverProfile?.id
+      }
     }
 
     if (status) {

@@ -13,21 +13,29 @@ const MapView = dynamic(() => import('@/components/map/MapView').then(m => m.Map
 interface RideRequest {
   id: string
   passenger: {
-    firstName: string
-    lastName: string
-    rating: number
     tripCount: number
+    user: { firstName: string; lastName: string; phone: string }
   }
   originAddress: string
   destAddress: string
   estimatedFare: number
-  distance: number
+  riderName?: string | null
+  riderPhone?: string | null
+  vehicleType?: string
+}
+
+const VEHICLE_LABELS: Record<string, { icon: string; name: string }> = {
+  moto: { icon: '🏍️', name: 'Moto' },
+  car: { icon: '🚗', name: 'Carrito' },
+  chill: { icon: '🚙', name: 'Carrito Chill' },
+  pets: { icon: '🐕', name: 'Mascotas' },
 }
 
 export default function DriverDashboard() {
   const { user, logout } = useAuth()
   const [isOnline, setIsOnline] = useState(false)
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [bsRate, setBsRate] = useState<number | null>(null)
   const [todayStats, setTodayStats] = useState({
     earnings: 0,
     trips: 0,
@@ -55,10 +63,40 @@ export default function DriverDashboard() {
         (error) => {
           console.error('Location error:', error)
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, timeout: 10000 }
       )
     }
   }, [isOnline])
+
+  // Poll solicitudes abiertas cuando está en línea
+  useEffect(() => {
+    if (!isOnline) return
+    const load = async () => {
+      try {
+        const res = await fetch('/api/rides?status=SEARCHING_DRIVER&limit=10')
+        const data = await res.json()
+        if (data.success) setRideRequests(data.data.rides)
+      } catch {}
+    }
+    load()
+    const iv = setInterval(load, 10000)
+    return () => clearInterval(iv)
+  }, [isOnline])
+
+  // Tasa BCV USD→Bs
+  useEffect(() => {
+    fetch('/api/rates')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data?.usdToBs) setBsRate(data.data.usdToBs)
+      })
+      .catch(() => {})
+  }, [])
+
+  const fmtBs = (usd: number) => {
+    if (!bsRate) return null
+    return `${Math.round(usd * bsRate).toLocaleString('es-VE')} Bs`
+  }
 
   const updateLocation = async (location: { lat: number; lng: number }) => {
     try {
@@ -243,23 +281,33 @@ export default function DriverDashboard() {
                   Solicitudes cercanas ({rideRequests.length})
                 </h2>
                 <div className="space-y-4">
-                  {rideRequests.map((request) => (
+                  {rideRequests.map((request) => {
+                    const vehicle = VEHICLE_LABELS[request.vehicleType || 'moto']
+                    return (
                     <Card key={request.id} className="border-primary">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="font-semibold text-gray-900">
-                              👤 {request.passenger.firstName} {request.passenger.lastName}
+                              👤 {request.passenger.user.firstName} {request.passenger.user.lastName}
                             </h3>
                             <p className="text-sm text-gray-500">
-                              ⭐ {request.passenger.rating} • {request.passenger.tripCount} viajes
+                              🛵 {vehicle?.icon} {vehicle?.name} • {request.passenger.tripCount} viajes
                             </p>
+                            {request.riderName && (
+                              <p className="text-sm font-semibold text-blue-600">
+                                👥 Para: {request.riderName}{request.riderPhone ? ` (${request.riderPhone})` : ''}
+                              </p>
+                            )}
                             <div className="mt-2 space-y-1 text-sm">
                               <p>📍 {request.originAddress}</p>
                               <p>📍 {request.destAddress}</p>
                             </div>
                             <p className="mt-2 text-lg font-bold text-primary">
                               💰 ${request.estimatedFare.toFixed(2)}
+                              {fmtBs(request.estimatedFare) && (
+                                <span className="ml-2 text-sm font-normal text-gray-500">≈ {fmtBs(request.estimatedFare)}</span>
+                              )}
                             </p>
                           </div>
                           <div className="flex gap-2">
@@ -276,7 +324,8 @@ export default function DriverDashboard() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                    )
+                  })}
 
                   {rideRequests.length === 0 && (
                     <div className="py-8 text-center text-gray-500">

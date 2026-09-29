@@ -252,6 +252,11 @@ model Ride {
   distanceKm      Float?
   durationMinutes Float?
 
+  // Servicio y pasajero (¿quién va a viajar?)
+  vehicleType     String  @default("moto") // moto, car, chill, pets
+  riderName       String? // si pide para otra persona
+  riderPhone      String?
+
   // Timing
   requestedAt     DateTime @default(now())
   assignedAt      DateTime?
