@@ -22,7 +22,7 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-header">
+      <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="container mx-auto flex h-14 items-center justify-between gap-2 px-3 sm:h-16 sm:px-4">
           <div className="flex items-center gap-2">
             <Image
@@ -493,7 +493,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="glass-header border-t-0 py-6 sm:py-8">
+      <footer className="border-t border-gray-200/80 bg-white py-6 shadow-[0_-4px_24px_rgba(0,0,0,0.04)] sm:py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-between gap-3 text-center md:flex-row md:text-left">
             <div className="flex items-center gap-2">
