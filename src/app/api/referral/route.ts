@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import jwt from 'jsonwebtoken'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('access_token')?.value
-    if (!token) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'rapidito-secret-key-2024') as { userId: string }
-    
     const { code } = await request.json()
     if (!code) {
       return NextResponse.json({ success: false, error: 'Código requerido' }, { status: 400 })
@@ -27,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Código inválido' }, { status: 400 })
     }
 
-    if (referrer.id === decoded.userId) {
+    if (referrer.id === user.id) {
       return NextResponse.json({ success: false, error: 'No puedes usar tu propio código' }, { status: 400 })
     }
 
@@ -35,7 +31,7 @@ export async function POST(request: NextRequest) {
     const existingReferral = await prisma.referral.findFirst({
       where: {
         referrerId: referrer.id,
-        referredId: decoded.userId
+        referredId: user.id
       }
     })
 
@@ -47,7 +43,7 @@ export async function POST(request: NextRequest) {
     const referral = await prisma.referral.create({
       data: {
         referrerId: referrer.id,
-        referredId: decoded.userId,
+        referredId: user.id,
         code: code,
         rewardAmount: 0
       }
@@ -68,30 +64,28 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const token = request.cookies.get('access_token')?.value
-    if (!token) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'rapidito-secret-key-2024') as { userId: string }
-
     // Get user's referral code and stats
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+    const referralUser = await prisma.user.findUnique({
+      where: { id: user.id },
       select: { referralCode: true }
     })
 
     // Count referrals made
     const referralsMade = await prisma.referral.count({
-      where: { referrerId: decoded.userId }
+      where: { referrerId: user.id }
     })
 
     // Count rides completed
     const ridesCompleted = await prisma.ride.count({
       where: { 
-        passengerId: decoded.userId,
+        passengerId: user.id,
         status: 'COMPLETED'
       }
     })
@@ -102,7 +96,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        referralCode: user?.referralCode,
+        referralCode: referralUser?.referralCode,
         referralsMade,
         ridesCompleted,
         referralDiscountsUsed,

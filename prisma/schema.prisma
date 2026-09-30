@@ -92,6 +92,7 @@ model OtpCode {
   code      String
   purpose   String   // "registration", "login", "password_reset"
   isUsed    Boolean  @default(false)
+  attempts  Int      @default(0)
   expiresAt DateTime
   createdAt DateTime @default(now())
 

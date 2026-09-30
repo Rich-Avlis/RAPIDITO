@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import { createOtpCode } from '@/lib/auth'
 import { successResponse, errorResponse } from '@/lib/api-response'
+import { rateLimit, clientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,12 @@ export async function POST(request: NextRequest) {
     if (!purpose || !['registration', 'login', 'password_reset'].includes(purpose)) {
       return errorResponse('Propósito inválido', 400)
     }
+
+    // Abuse protection: per phone + per IP
+    const phoneLimit = rateLimit(`otp:req:phone:${phone}`, 5, 10 * 60 * 1000)
+    const ipLimit = rateLimit(`otp:req:ip:${clientIp(request)}`, 20, 10 * 60 * 1000)
+    if (!phoneLimit.ok) return rateLimitResponse(phoneLimit.retryAfter)
+    if (!ipLimit.ok) return rateLimitResponse(ipLimit.retryAfter)
 
     // Check if user exists (for login and password_reset)
     if (purpose === 'login' || purpose === 'password_reset') {
@@ -42,7 +49,10 @@ export async function POST(request: NextRequest) {
     const code = await createOtpCode(phone, purpose)
 
     // TODO: Send via SMS (Twilio)
-    console.log(`📱 OTP para ${phone} (${purpose}): ${code}`)
+    // Never log the code in production (it would allow account takeover from logs)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📱 OTP para ${phone} (${purpose}): ${code}`)
+    }
 
     // In development, return the code in response
     const isDev = process.env.NODE_ENV !== 'production'

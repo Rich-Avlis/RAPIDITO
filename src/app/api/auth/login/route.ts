@@ -3,11 +3,18 @@ import prisma from '@/lib/prisma'
 import { verifyPassword, createSession } from '@/lib/auth'
 import { loginSchema } from '@/lib/validations'
 import { successResponse, errorResponse } from '@/lib/api-response'
+import { rateLimit, clientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const validatedData = loginSchema.parse(body)
+
+    // Brute-force protection: per phone + per IP
+    const phoneLimit = rateLimit(`login:phone:${validatedData.phone}`, 10, 15 * 60 * 1000)
+    const ipLimit = rateLimit(`login:ip:${clientIp(request)}`, 30, 15 * 60 * 1000)
+    if (!phoneLimit.ok) return rateLimitResponse(phoneLimit.retryAfter)
+    if (!ipLimit.ok) return rateLimitResponse(ipLimit.retryAfter)
 
     // Find user by phone
     const user = await prisma.user.findUnique({

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyOtpCode, createSession } from '@/lib/auth'
 import { successResponse, errorResponse } from '@/lib/api-response'
+import { rateLimit, clientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,13 +19,19 @@ export async function POST(request: NextRequest) {
       return errorResponse('Formato de teléfono inválido', 400)
     }
 
-    if (code.length !== 6) {
+    if (String(code).length !== 6) {
       return errorResponse('El código debe tener 6 dígitos', 400)
     }
 
     if (!['registration', 'login', 'password_reset'].includes(purpose)) {
       return errorResponse('Propósito inválido', 400)
     }
+
+    // Brute-force protection: per phone + per IP
+    const phoneLimit = rateLimit(`otp:ver:phone:${phone}`, 10, 10 * 60 * 1000)
+    const ipLimit = rateLimit(`otp:ver:ip:${clientIp(request)}`, 30, 10 * 60 * 1000)
+    if (!phoneLimit.ok) return rateLimitResponse(phoneLimit.retryAfter)
+    if (!ipLimit.ok) return rateLimitResponse(ipLimit.retryAfter)
 
     // Verify OTP
     const result = await verifyOtpCode(phone, code, purpose)

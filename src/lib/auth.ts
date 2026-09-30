@@ -1,11 +1,28 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
+import { randomInt, timingSafeEqual } from 'crypto'
 import prisma from './prisma'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'rapidito-secret-change-in-production'
+function resolveJwtSecret(): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    // Sin secreto no se puede firmar/verificar de forma segura: fallar en frío
+    // (nunca usar un fallback hardcodeado que permita forjar tokens)
+    throw new Error(
+      'JWT_SECRET no está definido. Configúralo en las variables de entorno.'
+    )
+  }
+  if (secret.length < 32) {
+    console.warn('[auth] JWT_SECRET es demasiado corto (<32). Usa un secreto fuerte.')
+  }
+  return secret
+}
+
+const JWT_SECRET = resolveJwtSecret()
 const ACCESS_TOKEN_EXPIRES = '15m'
 const REFRESH_TOKEN_EXPIRES = '7d'
+const MAX_OTP_ATTEMPTS = 5
 
 export interface JwtPayload {
   userId: string
@@ -150,7 +167,8 @@ export async function getCurrentUser() {
 // ==========================================
 
 export function generateOtpCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  // randomInt es criptográficamente seguro (Math.random no lo es)
+  return randomInt(0, 1000000).toString().padStart(6, '0')
 }
 
 export async function createOtpCode(phone: string, purpose: string): Promise<string> {
@@ -185,11 +203,10 @@ export async function verifyOtpCode(
   code: string,
   purpose: string
 ): Promise<{ valid: boolean; error?: string }> {
-  // Find the OTP
+  // Find the active OTP for this phone/purpose (code compared in constant time)
   const otpRecord = await prisma.otpCode.findFirst({
     where: {
       phone,
-      code,
       purpose,
       isUsed: false,
       expiresAt: { gt: new Date() },
@@ -198,6 +215,33 @@ export async function verifyOtpCode(
   })
 
   if (!otpRecord) {
+    return { valid: false, error: 'Código inválido o expirado' }
+  }
+
+  const attempts = otpRecord.attempts + 1
+  const submitted = String(code)
+  const matches =
+    otpRecord.code.length === submitted.length &&
+    timingSafeEqual(Buffer.from(otpRecord.code), Buffer.from(submitted))
+
+  if (attempts >= MAX_OTP_ATTEMPTS) {
+    // Brute-force protection: invalidate the code entirely
+    await prisma.otpCode.update({
+      where: { id: otpRecord.id },
+      data: { isUsed: true, attempts },
+    })
+    return {
+      valid: false,
+      error: 'Demasiados intentos. Solicita un código nuevo.',
+    }
+  }
+
+  await prisma.otpCode.update({
+    where: { id: otpRecord.id },
+    data: { attempts },
+  })
+
+  if (!matches) {
     return { valid: false, error: 'Código inválido o expirado' }
   }
 
