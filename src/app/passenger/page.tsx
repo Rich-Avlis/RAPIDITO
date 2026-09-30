@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { useTheme, themes } from '@/providers/theme-provider'
+import { CURATED_PLACES, PLACE_SECTIONS, matchCuratedPlaces } from '@/lib/places'
 import FluidOrb from '@/components/ui/fluid-orb'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
@@ -324,9 +325,14 @@ export default function PassengerDashboard() {
   }, [user])
 
   useEffect(() => {
-    if (navigator.geolocation) {
+    if (!navigator.geolocation) return
+    let cancelled = false
+    let tries = 0
+
+    const requestLocation = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+          if (cancelled) return
           const loc = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
@@ -346,14 +352,18 @@ export default function PassengerDashboard() {
             setLocationName('Ubicación actual')
           }
         },
-        (error) => {
-          console.error('Location error:', error)
-          if (error.code === error.PERMISSION_DENIED) {
-            setLocationName('Activa el permiso de ubicación')
-          }
+        () => {
+          // Reintentar hasta obtener la ubicación (permiso concedido después, GPS tardío, etc.)
+          tries += 1
+          if (!cancelled && tries < 60) setTimeout(requestLocation, 4000)
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
       )
+    }
+
+    requestLocation()
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -367,7 +377,7 @@ export default function PassengerDashboard() {
     if (!currentLocation) return
     try {
       const response = await fetch(
-        `/api/drivers/nearby?lat=${currentLocation.lat}&lng=${currentLocation.lng}&radius=5`
+        `/api/drivers/nearby?lat=${currentLocation.lat}&lng=${currentLocation.lng}&radius=10`
       )
       const data = await response.json()
       if (data.success) {
@@ -525,12 +535,17 @@ export default function PassengerDashboard() {
     }
   }
 
-  // Nominatim search for places
+  // Nominatim search for places (con coincidencias locales instantáneas)
   const searchPlaces = useCallback(async (query: string) => {
-    if (query.length < 3) {
+    const q = query.trim()
+    if (q.length < 2) {
       setSearchSuggestions([])
       return
     }
+
+    const local = matchCuratedPlaces(q, 6)
+    setSearchSuggestions(local)
+    if (q.length < 3) return
 
     setIsSearchingPlaces(true)
     try {
@@ -538,14 +553,18 @@ export default function PassengerDashboard() {
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Quíbor, Venezuela')}&format=json&limit=5&accept-language=es&addressdetails=1`
       )
       const data = await res.json()
-      const suggestions: SearchSuggestion[] = data.map((item: any) => ({
+      const remote: SearchSuggestion[] = data.map((item: any) => ({
         name: item.display_name?.split(',').slice(0, 3).join(',') || item.name,
         lat: parseFloat(item.lat),
         lng: parseFloat(item.lon),
       }))
-      setSearchSuggestions(suggestions)
+      const seen = new Set(local.map(l => l.name.toLowerCase()))
+      setSearchSuggestions(
+        [...local, ...remote.filter(r => !seen.has(r.name.toLowerCase()))].slice(0, 8)
+      )
     } catch (error) {
       console.error('Search error:', error)
+      setSearchSuggestions(local)
     } finally {
       setIsSearchingPlaces(false)
     }
@@ -1102,6 +1121,41 @@ export default function PassengerDashboard() {
                   )}
                 </div>
               </div>
+
+              {/* Lugares curados (sin escribir nada) */}
+              {!searchQuery && !searchSuggestions.length && (
+                <div className="space-y-5">
+                  {PLACE_SECTIONS.map((section) => {
+                    const items = CURATED_PLACES.filter((p) => p.category === section.category).slice(0, section.limit)
+                    if (!items.length) return null
+                    return (
+                      <div key={section.category} className="space-y-2">
+                        <p className="text-sm font-medium" style={{ color: t.textSecondary }}>
+                          {section.icon} {section.title}
+                        </p>
+                        <div className="space-y-2">
+                          {items.map((place, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSelectFromHistory(place)}
+                              className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-colors hover:opacity-80"
+                              style={{ backgroundColor: t.bgTertiary }}
+                            >
+                              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: t.border }}>
+                                <span className="text-lg">{section.icon}</span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-base font-bold truncate" style={{ color: t.text }}>{place.name}</p>
+                                <p className="text-sm truncate" style={{ color: t.textSecondary }}>{place.hint}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
 
               {/* Search History */}
               {searchHistory.length > 0 && !searchQuery && (

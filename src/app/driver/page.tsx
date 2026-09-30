@@ -47,26 +47,45 @@ export default function DriverDashboard() {
   const [isUpdatingRide, setIsUpdatingRide] = useState(false)
 
   useEffect(() => {
-    // Get driver's current location
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        (position) => {
-          const newLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          }
-          setCurrentLocation(newLocation)
-          
-          // Update location on server if online
-          if (isOnline) {
-            updateLocation(newLocation)
-          }
-        },
+    // Obtener ubicación del conductor (con reintentos hasta obtener la primera fix)
+    if (!navigator.geolocation) return
+    let cancelled = false
+    let tries = 0
+    let watchId: number | null = null
+
+    const applyLocation = (position: GeolocationPosition) => {
+      if (cancelled) return
+      tries = 0
+      const newLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      }
+      setCurrentLocation(newLocation)
+
+      // Update location on server if online
+      if (isOnline) {
+        updateLocation(newLocation)
+      }
+    }
+
+    const startWatch = () => {
+      if (cancelled) return
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+      watchId = navigator.geolocation.watchPosition(
+        applyLocation,
         (error) => {
           console.error('Location error:', error)
+          tries += 1
+          if (!cancelled && tries < 60) setTimeout(startWatch, 5000)
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
       )
+    }
+
+    startWatch()
+    return () => {
+      cancelled = true
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId)
     }
   }, [isOnline])
 

@@ -60,7 +60,7 @@ async function trip (ride) {
 async function main () {
   await login()
   // asegurar conductor en línea
-  await api('/api/drivers/status', { method: 'PUT', body: JSON.stringify({ isOnline: true, lat: 10.0272, lng: -69.3494 }) })
+  await api('/api/drivers/status', { method: 'PUT', body: JSON.stringify({ isOnline: true, lat: 9.9290, lng: -69.6190 }) })
   console.log(new Date().toISOString(), 'bot listo, esperando viajes...')
 
   while (true) {
